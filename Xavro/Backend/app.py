@@ -1,22 +1,33 @@
-import os
+import os, logging
 
+from flask import Flask
 from dotenv import load_dotenv
 
 from config import DevelopmentConfig, ProductionConfig
-from app import create_app
+from app.models import connect_db
 
-load_dotenv()
-print("OK we are in the app.py!!!!!")
-if os.environ.get('ENVIRONMENT') == 'DEV':
-    config_class = DevelopmentConfig
-    debug = True
-else:
-    config_class = ProductionConfig
-    debug = False
- 
+load_dotenv() #use this to read in environment below
 
-app = create_app(config_class)
+def create_app(config_class=ProductionConfig):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    logging.basicConfig(filename='app.log')
+    
+
+    @app.route("/", methods=["GET"])
+    def show_homepage():
+        return "Hello you big tiger!"
+
+    return app
+
 
 if __name__ == '__main__':
+    if os.environ.get('ENVIRONMENT') == 'DEV':
+        app = create_app(DevelopmentConfig)
+        debug = True
+    else:
+        app = create_app(ProductionConfig)
+        debug = False
+    connect_db(app)
     app.run(port=8080, debug=debug)
 
