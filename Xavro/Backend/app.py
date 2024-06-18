@@ -1,18 +1,19 @@
-import os, logging
+import logging
+import os
 
-from flask import Flask
 from dotenv import load_dotenv
+from flask import Flask
 
-from config import DevelopmentConfig, ProductionConfig
 from app.models import connect_db
+from config import DevelopmentConfig, ProductionConfig
 
-load_dotenv() #use this to read in environment below
+load_dotenv()  # use this to read in environment below
+
 
 def create_app(config_class=ProductionConfig):
     app = Flask(__name__)
     app.config.from_object(config_class)
     logging.basicConfig(filename='app.log')
-    
 
     @app.route("/", methods=["GET"])
     def show_homepage():
