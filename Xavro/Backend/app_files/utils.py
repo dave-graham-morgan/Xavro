@@ -21,4 +21,5 @@ class Roles(Enum):
 
 
 def get_allowed_origins():
+    print("DOES THIS PRINT EVEN!!!!")
     return config_globals.ALLOWED_ORIGINS
