@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 
-from .utils import PaymentStatus
+from .utils import PaymentStatus, BookingStatus, Roles
 
 db = SQLAlchemy()
 
@@ -34,9 +34,8 @@ class Room(db.Model):
     max_capacity = db.Column(db.Integer, nullable=False)
     min_capacity = db.Column(db.Integer, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
-    cost = db.Column(db.Float, nullable=False)
     reset_buffer = db.Column(db.Integer, nullable=False)
-    launch_date = db.Column(db.DateTime, nullable=False)
+    launch_date = db.Column(db.DateTime, nullable=True)
     sunset_date = db.Column(db.Float, nullable=True)
     description = db.Column(db.String, nullable=True)
 
@@ -92,7 +91,7 @@ class Booking(db.Model):
     showtime_id = db.Column(db.Integer, db.ForeignKey('showtimes.id', ondelete="cascade"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete="cascade"), nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
-    # status = db.Column(db.Enum(BookingStatus), default=BookingStatus.NOT_PAID)
+    status = db.Column(db.Enum(BookingStatus), default=BookingStatus.NOT_BOOKED)
     order_id = db.Column(db.String, nullable=False)  # this is the customer-facing ID
 
 
@@ -104,3 +103,15 @@ class Payments(db.Model):
     booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id', ondelete="cascade"), nullable=False)
     payment_amt = db.Column(db.Float, nullable=False)
     status = db.Column(db.Enum(PaymentStatus), default=PaymentStatus.NOT_PAID)
+
+
+class User(db.Model):
+    """User model"""
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False)
+    password = db.Column(db.String(61), nullable=False)
+    email = db.Column(db.String(256), nullable=False)
+    last_login = db.Column(db.DateTime, nullable=True)
+    roll = db.Column(db.Enum(Roles), default=Roles.GUEST, nullable=False)
