@@ -17,8 +17,9 @@ def display_signup():
 
 # use lambda in the cross-origin decorator to ensure this is within application context
 @rooms_blueprint.route("/api/rooms", methods=["POST", "OPTIONS"])
-@cross_origin(origins=get_allowed_origins())
+@cross_origin(origins='http://localhost:5173')
 def display_rooms():
+    print(get_allowed_origins())
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid Data"}), 400

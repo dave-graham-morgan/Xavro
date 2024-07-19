@@ -1,7 +1,7 @@
-from backend.app import create_app
-from app.models import connect_db
-from backend.config import DevelopmentConfig, ProductionConfig
 import os
+from .app import create_app
+from backend.app_files.models import connect_db
+from backend.config import DevelopmentConfig, ProductionConfig
 
 
 if __name__ == '__main__':
