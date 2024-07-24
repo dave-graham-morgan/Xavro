@@ -24,21 +24,21 @@ def save_room_data(data):
 
     except ValueError as e:
         logging.error(f"Error with datatypes not being integers: {e}")
-        return jsonify({"error": "Invalid data type"}), 400
+        return jsonify({"error": "Invalid data type"}), 200
 
     # Do validation even though UI will also do this
     # make sure none of the required fields are empty
     if not all([title, max_capacity, min_capacity, duration, reset_buffer]):
         logging.error("Error: missing required fields")
-        return jsonify({"Error": "Missing required fields"}), 400
+        return jsonify({"Error": "Missing required fields"}), 200
 
     # make sure min and max capacity are positive integers and min is less than max
     if not isinstance(max_capacity, int) or max_capacity <= 0:
         logging.error("Error: Max Capacity must be a positive integer")
-        return jsonify({"Error": "Max Capacity must be a positive integer"}), 400
+        return jsonify({"Error": "Max Capacity must be a positive integer"}), 200
     if not isinstance(min_capacity, int) or min_capacity <= 0:
         logging.error("Error: Min Capacity must be a positive integer")
-        return jsonify({"error": "Min Capacity must be a positive integer"}), 400
+        return jsonify({"error": "Min Capacity must be a positive integer"}), 200
     if min_capacity > max_capacity:
         logging.error("Error: Min Capacity must be less than Max Capacity")
         return jsonify({"error": "Min Capacity must be less than Max Capacity"}), 400

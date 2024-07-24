@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import relationship
 
 from .utils import PaymentStatus, BookingStatus, Roles
 
@@ -24,6 +25,7 @@ class Customer(db.Model):
     last_login = db.Column(db.Date)
     us_minor = db.Column(db.Boolean)
 
+    bookings = relationship("Booking", back_populates="customer")
 
 class Room(db.Model):
     """room table"""
@@ -36,8 +38,10 @@ class Room(db.Model):
     duration = db.Column(db.Integer, nullable=False)
     reset_buffer = db.Column(db.Integer, nullable=False)
     launch_date = db.Column(db.DateTime, nullable=True)
-    sunset_date = db.Column(db.Float, nullable=True)
+    sunset_date = db.Column(db.DateTime, nullable=True)
     description = db.Column(db.String, nullable=True)
+
+    showtimes = relationship("Showtime", back_populates="room")
 
 
 class RoomCost(db.Model):
@@ -81,6 +85,11 @@ class Showtime(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="cascade"), nullable=False)
     booked = db.Column(db.Boolean, nullable=True)
     bookable = db.Column(db.Boolean, nullable=True)
+    start_time = db.Column(db.Time, nullable=True)
+    end_time = db.Column(db.Time, nullable=True)
+
+    room = relationship("Room", back_populates="showtimes")
+    bookings = relationship("Booking", back_populates="showtime", cascade="all, delete-orphan")
 
 
 class Booking(db.Model):
@@ -93,6 +102,10 @@ class Booking(db.Model):
     guest_count = db.Column(db.Integer, nullable=False)
     status = db.Column(db.Enum(BookingStatus), default=BookingStatus.NOT_BOOKED)
     order_id = db.Column(db.String, nullable=False)  # this is the customer-facing ID
+    booking_date = db.Column(db.Date, nullable=False)  # added date field
+
+    showtime = relationship("Showtime", back_populates="bookings")
+    customer = relationship("Customer", back_populates="bookings")
 
 
 class Payments(db.Model):

@@ -1,5 +1,4 @@
 from enum import Enum
-from backend import config_globals
 
 
 class PaymentStatus(Enum):
@@ -20,6 +19,5 @@ class Roles(Enum):
     GUEST = 3
 
 
-def get_allowed_origins():
-    print("DOES THIS PRINT EVEN!!!!")
-    return config_globals.ALLOWED_ORIGINS
+def time_to_string(t):
+    return t.strftime("%H:%M:%S") if t else None

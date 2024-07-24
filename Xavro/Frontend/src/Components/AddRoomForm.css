@@ -1,0 +1,40 @@
+.container {
+    padding: 20px;
+}
+
+.card {
+    margin-top: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.message-placeholder {
+    height: 40px; /* Reserve space for the message */
+}
+
+.text-success, .text-danger {
+    margin-bottom: 15px;
+    text-align: center; /* Center the text */
+    padding: 10px; /* Add padding */
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    margin-right: 10px; /* Add right margin to labels */
+}
+
+.d-flex {
+    display: flex;
+}
+
+.justify-content-end {
+    justify-content: flex-end;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
