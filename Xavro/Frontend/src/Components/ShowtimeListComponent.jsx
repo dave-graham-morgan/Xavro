@@ -55,7 +55,12 @@ const ShowtimeListComponent = () => {
     return (
         <div className="showtime-list-container container mt-5">
             <h2>Showtimes for Room {roomId}</h2>
-            <Link to={`/rooms/${roomId}/add-showtime`} className="btn btn-primary mb-3">Add Showtime</Link>
+            <div className="d-flex justify-content-end mb-3">
+                <button onClick={() => navigate(`/rooms/${roomId}/add-showtime`)} className="btn btn-primary mr-2">
+                    <i className="fas fa-plus"></i> Add Showtime
+                </button>
+            </div>
+
             {showtimes.length === 0 ? (
                 <p>No showtimes available.</p>
             ) : (
@@ -77,7 +82,8 @@ const ShowtimeListComponent = () => {
                                 <td>{showtime.bookable ? 'Yes' : 'No'}</td>
                                 <td>{showtime.start_time}</td>
                                 <td>{showtime.end_time}</td>
-                                <td><Link to={`/rooms/${roomId}/edit-showtime/${showtime.id}`} className="btn btn-sm btn-secondary">
+                                <td><Link to={`/rooms/${roomId}/edit-showtime/${showtime.id}`}
+                                          className="btn btn-sm btn-secondary">
                                     <i className={"fas fa-edit"}></i>
                                 </Link>
                                     <button onClick={() => handleDelete(showtime.id)} className="btn btn-sm btn-danger">
@@ -85,11 +91,11 @@ const ShowtimeListComponent = () => {
                                     </button>
                                 </td>
                             </tr>
-                            ))}
+                        ))}
                         </tbody>
                     </table>
                 </div>
-                )}
+            )}
             <button onClick={() => navigate('/rooms')} className="btn btn-secondary mt-3">Return to Room List</button>
         </div>
     );

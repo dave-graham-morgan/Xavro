@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './AddRoomForm.css'; // Import the new CSS file
+import './RoomFormComponent.css'; // Import the new CSS file
 
-const AddRoomForm = () => {
+const RoomFormComponent = () => {
     const { roomId } = useParams();
     const [roomFormData, setRoomFormData] = useState({
         title: '',
@@ -20,6 +20,7 @@ const AddRoomForm = () => {
 
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (roomId) {
@@ -246,13 +247,16 @@ const AddRoomForm = () => {
                             />
                         </div>
                         <div className="d-flex justify-content-end mt-3">
-                            <button type="submit" className="btn btn-primary">{roomId ? 'Update Room' : 'Submit'}</button>
+                            <button type="submit"
+                                    className="btn btn-primary">{roomId ? 'Update Room' : 'Submit'}</button>
                         </div>
                     </form>
+                    <button onClick={() => navigate('/rooms')} className="btn btn-secondary mt-3">Return to Room List
+                    </button>
                 </div>
             </div>
         </div>
     );
 }
 
-export default AddRoomForm;
+export default RoomFormComponent;

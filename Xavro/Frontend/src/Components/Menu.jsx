@@ -16,14 +16,9 @@ const Menu = () => {
                             <NavLink exact="true" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")} to="/">Home</NavLink>
                         </li>
                         <li className="nav-item">
-                            <NavLink className={({ isActive }) => "nav-link" + (isActive ? " active" : "")} to="/add-room">Add Room</NavLink>
-                        </li>
-                        <li className="nav-item">
                             <NavLink className={({ isActive }) => "nav-link" + (isActive ? " active" : "")} to="/rooms">Rooms</NavLink>
                         </li>
-                        <li className="nav-item">
-                            <NavLink className={({ isActive }) => "nav-link" + (isActive ? " active" : "")} to="/showtimes">Showtimes</NavLink>
-                        </li>
+
                     </ul>
                 </div>
             </div>

@@ -167,8 +167,8 @@ const ShowtimeFormComponent = () => {
                     </form>
                 </div>
             </div>
-            <div className="d-flex justify-content-end mt-3">
-                <button onClick={() => navigate(`/rooms/${roomId}/showtimes`)} className="btn btn-secondary">Return to Showtimes</button>
+            <div className="d-flex ">
+                <button onClick={() => navigate(`/rooms/${roomId}/showtimes`)} className="btn btn-secondary mb-3">Return to Showtimes</button>
             </div>
         </div>
     );

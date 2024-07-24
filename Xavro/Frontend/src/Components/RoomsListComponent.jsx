@@ -65,9 +65,7 @@ const RoomsListComponent = () => {
                         <tbody>
                         {rooms.map(room => (
                             <tr key={room.id}>
-                                <td>
-                                    <Link to={`/edit-room/${room.id}`}>{room.title}</Link>
-                                </td>
+                                <td>{room.title}</td>
                                 <td>{room.max_capacity}</td>
                                 <td>{room.min_capacity}</td>
                                 <td>{room.duration} minutes</td>
@@ -75,11 +73,19 @@ const RoomsListComponent = () => {
                                 <td>{room.launch_date}</td>
                                 <td>{room.sunset_date}</td>
                                 <td>{room.description}</td>
+
                                 <td>
-                                    <Link to={`/rooms/${room.id}/room-costs`} className="btn btn-sm btn-secondary">Manage
-                                        Room Costs</Link>
-                                    <Link to={`/rooms/${room.id}/showtimes`} className="btn btn-sm btn-secondary">Manage
-                                        Showtimes</Link>
+                                    <div className="btn-group" role="group">
+                                        <Link to={`/rooms/edit-room/${room.id}`} className="btn btn-sm btn-secondary">
+                                            <i className="fas fa-edit"></i>
+                                        </Link>
+                                        <Link to={`/rooms/${room.id}/room-costs`} className="btn btn-sm btn-success">
+                                            <i className="fas fa-dollar-sign"></i>
+                                        </Link>
+                                        <Link to={`/rooms/${room.id}/showtimes`} className="btn btn-sm btn-warning">
+                                            <i className="fas fa-clock"></i> 
+                                        </Link>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

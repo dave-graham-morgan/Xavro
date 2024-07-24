@@ -129,7 +129,7 @@ const RoomCostFormComponent = () => {
         <div className="room-cost-form-container container mt-5">
             {responseMessage && <p className="text-success">{responseMessage}</p>}
             {errorMessage && <p className="text-danger">{errorMessage}</p>}
-            <button onClick={handleReturnClick} className="btn btn-secondary mb-3">Return to Room Costs</button>
+
             <div className="card">
                 <div className="card-header">
                     <h2>{costId ? 'Edit Room Cost' : 'Add Room Cost'}</h2>
@@ -145,7 +145,8 @@ const RoomCostFormComponent = () => {
                                 value={costFormData.guests_count}
                                 onChange={handleChange}
                             />
-                            {formErrors.guests_count && <div className="invalid-feedback">{formErrors.guests_count}</div>}
+                            {formErrors.guests_count &&
+                                <div className="invalid-feedback">{formErrors.guests_count}</div>}
                         </div>
                         <div className="form-group">
                             <label>Total Cost:</label>
@@ -181,11 +182,13 @@ const RoomCostFormComponent = () => {
                             />
                         </div>
                         <div className="d-flex justify-content-end mt-3">
-                            <button type="submit" className="btn btn-primary">{costId ? 'Update Cost' : 'Add Cost'}</button>
+                            <button type="submit"
+                                    className="btn btn-primary">{costId ? 'Update Cost' : 'Add Cost'}</button>
                         </div>
                     </form>
                 </div>
             </div>
+            <button onClick={handleReturnClick} className="btn btn-secondary mb-3">Return to Room Costs</button>
         </div>
     );
 }

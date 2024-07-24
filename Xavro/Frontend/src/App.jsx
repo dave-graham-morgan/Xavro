@@ -4,7 +4,7 @@ import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 import './App.css'
 import Menu from "./Components/Menu.jsx";
 import RoomsListComponent from "./Components/RoomsListComponent.jsx";
-import AddRoomForm from "./Components/AddRoomForm.jsx"
+import RoomFormComponent from "./Components/RoomFormComponent.jsx"
 import RoomCostListComponent from "./Components/RoomCostListComponent.jsx";
 import RoomCostFormComponent from "./Components/RoomCostFormComponent.jsx";
 import BookingComponent from "./Components/BookingComponent.jsx";
@@ -20,12 +20,12 @@ const App = () => {
                 <div className="container">
                     <Routes>
 
-                        <Route path="/add-room" element={<AddRoomForm/>} />
                         <Route path="/rooms" element={<RoomsListComponent />} />
-                        <Route path="/edit-room/:roomId" element={<AddRoomForm />} />
+                        <Route path="/rooms/add-room" element={<RoomFormComponent/>} />
+                        <Route path="/rooms/edit-room/:roomId" element={<RoomFormComponent />} />
 
                         <Route path="/rooms/:roomId/room-costs" element={<RoomCostListComponent />} />
-                        <Route path="/room-cost/:roomId/add" element={<RoomCostFormComponent />} />
+                        <Route path="/rooms/:roomId/add-cost" element={<RoomCostFormComponent />} />
                         <Route path="/rooms/:roomId/edit-cost/:costId" element={<RoomCostFormComponent />} />
 
                         <Route path="/rooms/:roomId/showtimes" element={<ShowtimeListComponent />} />
