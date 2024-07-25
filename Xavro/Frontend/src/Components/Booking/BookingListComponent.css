@@ -1,0 +1,30 @@
+.booking-container {
+    max-width: 100%; /* Make the container take up the full width */
+    position: relative;
+    top: 80px;
+    margin-top: 0;
+    padding: 20px;
+}
+.booking-container h2 {
+    margin-bottom: 20px;
+}
+
+.booking-container .table-responsive {
+    margin-top: 10px;
+}
+
+.booking-container .table {
+    width: 100%; /* Ensure the table takes up the full width of the container */
+}
+
+.booking-container .table thead th {
+    white-space: nowrap;
+}
+
+.booking-container .table tbody td {
+    white-space: nowrap;
+}
+
+.booking-container .btn-secondary, .btn-danger {
+    margin-right: 5px;
+}

@@ -1,0 +1,48 @@
+.booking-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-top: 60px; /* Adjust this value to make sure it's not hidden by the menu */
+}
+
+.booking-form-container {
+    padding: 20px;
+}
+
+.booking-form-container .card {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.booking-form-container .message-placeholder {
+    height: 40px; /* Reserve space for the message */
+}
+
+.booking-form-container .text-success, .text-danger {
+    margin-bottom: 15px;
+    text-align: center; /* Center the text */
+    padding: 10px; /* Add padding */
+}
+
+.booking-form-container .form-group {
+    margin-bottom: 15px;
+}
+
+.booking-form-container .form-group label {
+    margin-right: 10px; /* Add right margin to labels */
+}
+
+.booking-form-container .d-flex {
+    display: flex;
+}
+
+.booking-form-container .justify-content-end {
+    justify-content: flex-end;
+}
+
+.booking-form-container .mt-3 {
+    margin-top: 1rem;
+}
+

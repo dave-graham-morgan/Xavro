@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 
-from .utils import PaymentStatus, BookingStatus, Roles
+from .utils import PaymentStatus, Roles
 
 db = SQLAlchemy()
 
@@ -101,7 +101,6 @@ class Booking(db.Model):
     showtime_id = db.Column(db.Integer, db.ForeignKey('showtimes.id', ondelete="cascade"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete="cascade"), nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Enum(BookingStatus), default=BookingStatus.NOT_BOOKED)
     order_id = db.Column(db.String, nullable=False)  # this is the customer-facing ID
     booking_date = db.Column(db.Date, nullable=False)  # added date field
 

@@ -7,12 +7,6 @@ class PaymentStatus(Enum):
     FULL_PAID = 3
 
 
-class BookingStatus(Enum):
-    NOT_BOOKED = 1
-    RESCHEDULED = 2
-    CANCELLED = 3
-
-
 class Roles(Enum):
     ADMIN = 1
     EMPLOYEE = 0

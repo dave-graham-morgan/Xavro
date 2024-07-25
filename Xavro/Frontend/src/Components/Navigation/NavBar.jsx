@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './Menu.css'
+import './NavBar.css'
 
-const Menu = () => {
+const NavBar = () => {
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
             <div className="container">
@@ -25,6 +25,10 @@ const Menu = () => {
                             <NavLink className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
                                      to="/customers">Customers</NavLink>
                         </li>
+                        <li className="nav-item">
+                            <NavLink className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                                     to="/bookings">Bookings</NavLink>
+                        </li>
 
                     </ul>
                 </div>
@@ -33,4 +37,4 @@ const Menu = () => {
     );
 };
 
-export default Menu;
+export default NavBar;

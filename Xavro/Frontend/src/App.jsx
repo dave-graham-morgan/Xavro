@@ -1,12 +1,12 @@
 
 import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
 
-import Menu from "./Components/Navigation/Menu.jsx";
+import NavBar from "./Components/Navigation/NavBar.jsx";
 import RoomListComponent from "./Components/Room/RoomListComponent.jsx";
 import RoomFormComponent from "./Components/Room/RoomFormComponent.jsx"
 import RoomCostListComponent from "./Components/RoomCost/RoomCostListComponent.jsx";
 import RoomCostFormComponent from "./Components/RoomCost/RoomCostFormComponent.jsx";
-import BookingComponent from "./Components/Booking/BookingComponent.jsx";
+import BookingListComponent from "./Components/Booking/BookingListComponent.jsx";
 import BookingFormComponent from "./Components/Booking/BookingFormComponent.jsx";
 import ShowtimeFormComponent from "./Components/Showtime/ShowtimeFormComponent.jsx";
 import ShowtimeListComponent from "./Components/Showtime/ShowtimeListComponent.jsx";
@@ -17,7 +17,7 @@ const App = () => {
     return (
         <Router>
             <div>
-                <Menu />
+                <NavBar />
                 <div className="container">
                     <Routes>
 
@@ -33,9 +33,9 @@ const App = () => {
                         <Route path="/rooms/:roomId/add-showtime" element={<ShowtimeFormComponent />} />
                         <Route path="/rooms/:roomId/edit-showtime/:showtimeId" element={<ShowtimeFormComponent />} />
 
-                        <Route path="/bookings" element={<BookingComponent />} />
-                        <Route path="/add-booking" element={<BookingFormComponent />} />
-                        <Route path="/edit-booking/:bookingId" element={<BookingFormComponent />} />
+                        <Route path="/bookings" element={<BookingListComponent />} />
+                        <Route path="/bookings/add-booking" element={<BookingFormComponent />} />
+                        <Route path="/bookings/edit-booking/:bookingId" element={<BookingFormComponent />} />
 
                         <Route path="/customers" element={<CustomerListComponent/>} />
                         <Route path="/customers/add-customer" element={<CustomerFormComponent/>} />

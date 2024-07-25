@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './BookingFormComponent.css'
+
+// Note: this form is for creating bookings for dev only and will not be available in final app
 
 const BookingFormComponent = () => {
     const { bookingId } = useParams();
@@ -9,9 +12,8 @@ const BookingFormComponent = () => {
         showtime_id: '',
         customer_id: '',
         guest_count: '',
-        status: 'Not Booked',
         order_id: '',
-        date: ''
+        booking_date: ''
     });
 
     const [responseMessage, setResponseMessage] = useState('');
@@ -21,7 +23,11 @@ const BookingFormComponent = () => {
         if (bookingId) {
             const fetchBookingDetails = async () => {
                 try {
-                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/bookings/${bookingId}`);
+                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/bookings/${bookingId}`, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
@@ -30,9 +36,8 @@ const BookingFormComponent = () => {
                         showtime_id: data.showtime_id,
                         customer_id: data.customer_id,
                         guest_count: data.guest_count,
-                        status: data.status,
                         order_id: data.order_id,
-                        date: data.date
+                        booking_date: data.booking_date
                     });
                 } catch (error) {
                     console.error('Error fetching booking details:', error);
@@ -123,20 +128,6 @@ const BookingFormComponent = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Status:</label>
-                            <select
-                                className="form-control"
-                                name="status"
-                                value={bookingFormData.status}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="Not Booked">Not Booked</option>
-                                <option value="Booked">Booked</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
                             <label>Order ID:</label>
                             <input
                                 type="text"
@@ -148,12 +139,12 @@ const BookingFormComponent = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label>Date:</label>
+                            <label>Booking Date:</label>
                             <input
                                 type="date"
                                 className="form-control"
-                                name="date"
-                                value={bookingFormData.date}
+                                name="booking_date"
+                                value={bookingFormData.booking_date}
                                 onChange={handleChange}
                                 required
                             />
