@@ -87,10 +87,10 @@ const CustomerListComponent = () => {
                                 <td>{customer.customer_notes}</td>
                                 <td>
                                     <div className="btn-group" role="group">
-                                        <Link to={`/customers/${customer.id}/edit-customer`} className="btn btn-sm btn-secondary">
+                                        <Link to={`/customers/${customer.id}/edit-customer`} className="btn btn-sm btn-secondary" title="Edit Customer">
                                             <i className="fas fa-edit"></i>
                                         </Link>
-                                        <button onClick={() => handleDelete(customer.id)} className="btn btn-sm btn-danger">
+                                        <button onClick={() => handleDelete(customer.id)} className="btn btn-sm btn-danger" title="Delete Customer">
                                             <i className="fas fa-trash-alt"></i>
                                         </button>
                                     </div>

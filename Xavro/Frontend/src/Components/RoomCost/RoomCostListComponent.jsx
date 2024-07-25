@@ -39,7 +39,7 @@ const RoomCostListComponent = () => {
 
     const handleDelete = async (costId) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/room-costs/${costId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/room-costs/${costId}`, {
                 method: 'DELETE',
             });
             if (!response.ok) {

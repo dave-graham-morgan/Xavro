@@ -35,7 +35,7 @@ def add_room():
 
 @rooms_blueprint.route('/api/rooms/', methods=['GET'])
 @cross_origin()
-def get_rooms():
+def get_all_rooms():
     rooms = Room.query.all()
     rooms_list = [{
         'id': room.id,
@@ -66,6 +66,34 @@ def get_room(room_id):
         'launch_date': room.launch_date.isoformat() if room.launch_date else None,
         'sunset_date': room.sunset_date.isoformat() if room.sunset_date else None,
         'description': room.description
+    })
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>', methods=['DELETE'])
+@cross_origin()
+def delete_room(room_id):
+    room = Room.query.get_or_404(room_id)
+
+    try:
+        db.session.delete(room)
+        db.session.commit()
+        return jsonify({'message': 'Room deleted successfully'}), 204
+    except SQLAlchemyError as e:
+        print(f"error saving to database: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'something went wrong saving to database'}), 500
+    except Exception as e:
+        print(f"unknown error occured: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'something really bad went wrong'}), 500
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>/associations', methods=['GET'])
+def check_room_associations(room_id):
+    room_costs_count = RoomCost.query.filter_by(room_id=room_id).count()
+    showtimes_count = Showtime.query.filter_by(room_id=room_id).count()
+    return jsonify({
+        'has_associations': room_costs_count > 0 or showtimes_count > 0
     })
 
 
@@ -165,7 +193,7 @@ def update_room_cost(cost_id):
 
 
 # delete a single room-cost
-@rooms_blueprint.route('/api/room-costs/<int:cost_id>', methods=['DELETE'])
+@rooms_blueprint.route('/api/rooms/room-costs/<int:cost_id>', methods=['DELETE'])
 @cross_origin()
 def delete_room_cost(cost_id):
     cost = RoomCost.query.get_or_404(cost_id)

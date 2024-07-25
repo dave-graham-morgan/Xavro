@@ -7,7 +7,7 @@ const RoomListComponent = () => {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchRooms = async () => {
@@ -17,7 +17,12 @@ const RoomListComponent = () => {
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
-                setRooms(data);
+                const roomsWithAssociations = await Promise.all(data.map(async room => {
+                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/${room.id}/associations`);
+                    const associationData = await response.json();
+                    return { ...room, hasAssociations: associationData.has_associations };
+                }));
+                setRooms(roomsWithAssociations);
                 setLoading(false);
             } catch (error) {
                 setError(error);
@@ -27,6 +32,21 @@ const RoomListComponent = () => {
 
         fetchRooms();
     }, []);
+
+    const handleDelete = async (roomId) => {
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/${roomId}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            setRooms(rooms.filter(room => room.id !== roomId));
+        } catch (error) {
+            console.error('Error deleting room:', error);
+            setError('Error deleting room');
+        }
+    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -48,7 +68,7 @@ const RoomListComponent = () => {
                 <p>No rooms available.</p>
             ) : (
                 <div className="table-responsive">
-                    <table className="table table-striped ">
+                    <table className="table table-striped">
                         <thead>
                         <tr>
                             <th>Title</th>
@@ -73,19 +93,34 @@ const RoomListComponent = () => {
                                 <td>{room.launch_date}</td>
                                 <td>{room.sunset_date}</td>
                                 <td>{room.description}</td>
-
                                 <td>
                                     <div className="btn-group" role="group">
-                                        <Link to={`/rooms/edit-room/${room.id}`} className="btn btn-sm btn-secondary">
+                                        <Link to={`/rooms/edit-room/${room.id}`} className="btn btn-sm btn-secondary"
+                                              title="Edit Room">
                                             <i className="fas fa-edit"></i>
                                         </Link>
-                                        <Link to={`/rooms/${room.id}/room-costs`} className="btn btn-sm btn-success">
+                                        <Link to={`/rooms/${room.id}/room-costs`} className="btn btn-sm btn-success"
+                                              title="Room Costs">
                                             <i className="fas fa-dollar-sign"></i>
                                         </Link>
-                                        <Link to={`/rooms/${room.id}/showtimes`} className="btn btn-sm btn-warning">
+                                        <Link to={`/rooms/${room.id}/showtimes`} className="btn btn-sm btn-warning"
+                                              title="Showtimes">
                                             <i className="fas fa-clock"></i>
                                         </Link>
+                                        <div
+                                            title={room.hasAssociations ? "Remove costs and/or showtimes before deleting" : "Delete Room"}
+                                            style={{display: 'inline-block'}}
+                                        >
+                                            <button onClick={() => handleDelete(room.id)}
+                                                    className="btn btn-sm btn-danger"
+
+                                                    disabled={room.hasAssociations}>
+                                                <i className="fas fa-trash-alt"></i>
+
+                                            </button>
+                                        </div>
                                     </div>
+
                                 </td>
                             </tr>
                         ))}

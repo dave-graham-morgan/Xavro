@@ -83,10 +83,10 @@ const BookingListComponent = () => {
                                 <td>{booking.order_id}</td>
                                 <td>{booking.booking_date}</td>
                                 <td>
-                                    <Link to={`/bookings/edit-booking/${booking.id}`} className="btn btn-sm btn-secondary">
+                                    <Link to={`/bookings/edit-booking/${booking.id}`} className="btn btn-sm btn-secondary" title="Edit Booking">
                                         <i className="fas fa-edit"></i>
                                     </Link>
-                                    <button onClick={() => handleDelete(booking.id)} className="btn btn-sm btn-danger">
+                                    <button onClick={() => handleDelete(booking.id)} className="btn btn-sm btn-danger" title="Delete Booking">
                                         <i className="fas fa-trash-alt"></i>
                                     </button>
                                 </td>
