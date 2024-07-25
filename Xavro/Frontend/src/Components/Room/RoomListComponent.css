@@ -1,0 +1,25 @@
+.rooms-container{
+    max-width: 100%; /* Make the container take up the full width */
+    position: relative;
+    top: 80px;
+    margin-top: 0;
+    padding: 20px;
+}
+
+.rooms-container h2 {
+    margin-bottom: 20px;
+}
+
+.rooms-container .table-responsive {
+    margin-top: 10px;
+    overflow-x: auto; /* Ensure horizontal scrolling */
+    max-width: 100%; /* Allow the div to take up the full width */
+}
+
+.rooms-container .table {
+    width: 100%; /* Ensure the table takes up the full width */
+}
+
+.rooms-container .table thead th {
+    white-space: nowrap;
+}

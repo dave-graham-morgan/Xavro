@@ -1,0 +1,48 @@
+.room-cost-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-top: 60px; /* Adjust this value to make sure it's not hidden by the menu */
+}
+
+.room-cost-form-container {
+    padding: 20px;
+}
+
+.room-cost-form-container .card {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.room-cost-form-container .message-placeholder {
+    height: 40px; /* Reserve space for the message */
+}
+
+.room-cost-form-container .text-success, .text-danger {
+    margin-bottom: 15px;
+    text-align: center; /* Center the text */
+    padding: 10px; /* Add padding */
+}
+
+.room-cost-form-container .form-group {
+    margin-bottom: 15px;
+}
+
+.room-cost-form-container .form-group label {
+    margin-right: 10px; /* Add right margin to labels */
+}
+
+.room-cost-form-container .d-flex {
+    display: flex;
+}
+
+.room-cost-form-container .justify-content-end {
+    justify-content: flex-end;
+}
+
+.room-cost-form-container .mt-3 {
+    margin-top: 1rem;
+}
+

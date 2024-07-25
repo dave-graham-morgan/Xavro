@@ -1,0 +1,40 @@
+.showtime-form-container {
+    max-width: 600px;
+}
+
+.showtime-form-container .card {
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+}
+
+.showtime-form-container  .message-placeholder {
+    height: 40px; /* Reserve space for the message */
+}
+
+.showtime-form-container  .text-success, .text-danger {
+    margin-bottom: 15px;
+    text-align: center; /* Center the text */
+    padding: 10px; /* Add padding */
+}
+
+.showtime-form-container  .form-group {
+    margin-bottom: 15px;
+}
+
+.showtime-form-container .form-group label {
+    margin-right: 10px; /* Add right margin to labels */
+}
+
+.showtime-form-container .d-flex {
+    display: flex;
+}
+
+.showtime-form-container .justify-content-end {
+    justify-content: flex-end;
+}
+
+.showtime-form-container .mt-3 {
+    margin-top: 1rem;
+}

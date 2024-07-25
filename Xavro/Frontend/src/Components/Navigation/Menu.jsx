@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './Menu.css'
 
 const Menu = () => {
     return (
@@ -13,10 +14,16 @@ const Menu = () => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav">
                         <li className="nav-item">
-                            <NavLink exact="true" className={({ isActive }) => "nav-link" + (isActive ? " active" : "")} to="/">Home</NavLink>
+                            <NavLink exact="true" className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                                     to="/">Home</NavLink>
                         </li>
                         <li className="nav-item">
-                            <NavLink className={({ isActive }) => "nav-link" + (isActive ? " active" : "")} to="/rooms">Rooms</NavLink>
+                            <NavLink className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                                     to="/rooms">Rooms</NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink className={({isActive}) => "nav-link" + (isActive ? " active" : "")}
+                                     to="/customers">Customers</NavLink>
                         </li>
 
                     </ul>

@@ -151,7 +151,7 @@ const RoomFormComponent = () => {
     }
 
     return (
-        <div className="container mt-5">
+        <div className="container room-form-container mt-5">
             {responseMessage && <p className="text-success">{responseMessage}</p>}
             {errorMessage && <p className="text-danger">{errorMessage}</p>}
             <div className="card">
@@ -251,10 +251,12 @@ const RoomFormComponent = () => {
                                     className="btn btn-primary">{roomId ? 'Update Room' : 'Submit'}</button>
                         </div>
                     </form>
-                    <button onClick={() => navigate('/rooms')} className="btn btn-secondary mt-3">Return to Room List
-                    </button>
+
                 </div>
+
             </div>
+            <button onClick={() => navigate('/rooms')} className="btn btn-secondary mt-3">Return to Room List
+            </button>
         </div>
     );
 }

@@ -22,8 +22,9 @@ class Customer(db.Model):
     first_name = db.Column(db.String(50), nullable=True)
     last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(256), nullable=False)
-    last_login = db.Column(db.Date)
-    us_minor = db.Column(db.Boolean)
+    is_minor = db.Column(db.Boolean, nullable=True)
+    is_banned = db.Column(db.Boolean, nullable=True)
+    customer_notes = db.Column(db.String, nullable=True)
 
     bookings = relationship("Booking", back_populates="customer")
 

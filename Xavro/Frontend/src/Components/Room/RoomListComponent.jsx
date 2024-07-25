@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './RoomsListComponent.css';
+import './RoomListComponent.css';
 
-const RoomsListComponent = () => {
+const RoomListComponent = () => {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -40,7 +40,7 @@ const RoomsListComponent = () => {
         <div className="rooms-container container mt-5">
             <h2>Rooms List</h2>
             <div className="d-flex justify-content-end mb-3">
-                <button onClick={() => navigate('/add-room')} className="btn btn-primary mr-2">
+                <button onClick={() => navigate('/rooms/add-room')} className="btn btn-primary mr-2">
                     <i className="fas fa-plus"></i> Add Room
                 </button>
             </div>
@@ -48,7 +48,7 @@ const RoomsListComponent = () => {
                 <p>No rooms available.</p>
             ) : (
                 <div className="table-responsive">
-                    <table className="table table-striped">
+                    <table className="table table-striped ">
                         <thead>
                         <tr>
                             <th>Title</th>
@@ -83,7 +83,7 @@ const RoomsListComponent = () => {
                                             <i className="fas fa-dollar-sign"></i>
                                         </Link>
                                         <Link to={`/rooms/${room.id}/showtimes`} className="btn btn-sm btn-warning">
-                                            <i className="fas fa-clock"></i> 
+                                            <i className="fas fa-clock"></i>
                                         </Link>
                                     </div>
                                 </td>
@@ -97,4 +97,4 @@ const RoomsListComponent = () => {
     );
 };
 
-export default RoomsListComponent;
+export default RoomListComponent;

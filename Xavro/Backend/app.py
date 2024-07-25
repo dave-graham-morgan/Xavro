@@ -4,7 +4,13 @@ import os
 from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
-from backend.app_files.routes import auth_blueprint, rooms_blueprint, bookings_blueprint, showtimes_blueprint
+from backend.app_files.routes import (
+    auth_blueprint,
+    rooms_blueprint,
+    bookings_blueprint,
+    showtimes_blueprint,
+    customers_blueprint
+)
 from backend.config import ProductionConfig, DevelopmentConfig
 from backend.app_files.models import connect_db
 
@@ -34,6 +40,7 @@ def create_app(config_class=ProductionConfig):
     newApp.register_blueprint(rooms_blueprint)
     newApp.register_blueprint(bookings_blueprint)
     newApp.register_blueprint(showtimes_blueprint)
+    newApp.register_blueprint(customers_blueprint)
 
 
     return newApp
