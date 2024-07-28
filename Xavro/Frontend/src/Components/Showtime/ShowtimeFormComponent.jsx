@@ -8,8 +8,8 @@ const ShowtimeFormComponent = () => {
     const navigate = useNavigate();
     const [showtimeFormData, setShowtimeFormData] = useState({
         room_id: roomId,
-        booked: false,
-        bookable: true,
+        day_of_week: 0, // Default to Monday
+        timeslot: 1,
         start_time: '',
         end_time: ''
     });
@@ -33,8 +33,8 @@ const ShowtimeFormComponent = () => {
                     const data = await response.json();
                     setShowtimeFormData({
                         room_id: data.room_id,
-                        booked: data.booked,
-                        bookable: data.bookable,
+                        day_of_week: data.day_of_week,
+                        timeslot: data.timeslot,
                         start_time: data.start_time,
                         end_time: data.end_time
                     });
@@ -112,23 +112,32 @@ const ShowtimeFormComponent = () => {
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label>Booked:</label>
-                            <input
-                                type="checkbox"
-                                className="form-check-input"
-                                name="booked"
-                                checked={showtimeFormData.booked}
+                            <label>Day of the Week:</label>
+                            <select
+                                className="form-control"
+                                name="day_of_week"
+                                value={showtimeFormData.day_of_week}
                                 onChange={handleChange}
-                            />
+                                required
+                            >
+                                <option value={0}>Monday</option>
+                                <option value={1}>Tuesday</option>
+                                <option value={2}>Wednesday</option>
+                                <option value={3}>Thursday</option>
+                                <option value={4}>Friday</option>
+                                <option value={5}>Saturday</option>
+                                <option value={6}>Sunday</option>
+                            </select>
                         </div>
                         <div className="form-group">
-                            <label>Bookable:</label>
+                            <label>Timeslot:</label>
                             <input
-                                type="checkbox"
-                                className="form-check-input"
-                                name="bookable"
-                                checked={showtimeFormData.bookable}
+                                type="number"
+                                className="form-control"
+                                name="timeslot"
+                                value={showtimeFormData.timeslot}
                                 onChange={handleChange}
+                                required
                             />
                         </div>
                         <div className="form-group">
@@ -167,7 +176,7 @@ const ShowtimeFormComponent = () => {
                     </form>
                 </div>
             </div>
-            <div className="d-flex ">
+            <div className="d-flex">
                 <button onClick={() => navigate(`/rooms/${roomId}/showtimes`)} className="btn btn-secondary mb-3">Return to Showtimes</button>
             </div>
         </div>

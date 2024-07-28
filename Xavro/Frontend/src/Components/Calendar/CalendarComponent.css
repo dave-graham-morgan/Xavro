@@ -1,0 +1,38 @@
+/* Override the react-calendar default weekend styles */
+.react-calendar__month-view__days__day--weekend:not(
+    .react-calendar__month-view__days__day--neighboringMonth
+  ) {
+    color: black;
+}
+
+/* Remove the default styling for today */
+.react-calendar__tile--now {
+    background: none;
+}
+
+/* Highlight available dates */
+.calendar-container .highlight {
+    font-weight: 900;
+}
+
+.calendar-container .available-date{
+    color: black;
+    font-weight: bold;
+}
+
+/* Style for disabled dates */
+.calendar-container .disabled-date {
+    color: gray; /* Gray out dates before today or with no availability */
+    opacity: 0.6; /* Slightly fade out */
+}
+
+/* Style for selected dates */
+.calendar-container .selected-date {
+    background-color: #9d0a15 !important; /* Red background for the selected date */
+    color: white !important; /* White text for the selected date */
+    font-weight: 900; /* Bold text for the selected date */
+    border-radius: 50% !important; /* Make the background circular */
+}
+
+
+

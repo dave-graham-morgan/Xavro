@@ -10,6 +10,8 @@ const ShowtimeListComponent = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
     useEffect(() => {
         const fetchShowtimes = async () => {
             try {
@@ -18,6 +20,15 @@ const ShowtimeListComponent = () => {
                     throw new Error('Network response was not ok');
                 }
                 const data = await response.json();
+
+                // Sort showtimes by day_of_week and timeslot
+                data.sort((a, b) => {
+                    if (a.day_of_week !== b.day_of_week) {
+                        return a.day_of_week - b.day_of_week;
+                    }
+                    return a.timeslot - b.timeslot;
+                });
+
                 setShowtimes(data);
                 setLoading(false);
             } catch (error) {
@@ -68,25 +79,25 @@ const ShowtimeListComponent = () => {
                     <table className="table table-striped">
                         <thead>
                         <tr>
-                            <th>Booked</th>
-                            <th>Bookable</th>
                             <th>Start Time</th>
                             <th>End Time</th>
+                            <th>Day of the Week</th>
+                            <th>Timeslot</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         {showtimes.map(showtime => (
                             <tr key={showtime.id}>
-                                <td>{showtime.booked ? 'Yes' : 'No'}</td>
-                                <td>{showtime.bookable ? 'Yes' : 'No'}</td>
                                 <td>{showtime.start_time}</td>
                                 <td>{showtime.end_time}</td>
-                                <td><Link to={`/rooms/${roomId}/edit-showtime/${showtime.id}`}
-                                          className="btn btn-sm btn-secondary">
-                                    <i className={"fas fa-edit"}></i>
-                                </Link>
-                                    <button onClick={() => handleDelete(showtime.id)} className="btn btn-sm btn-danger">
+                                <td>{daysOfWeek[showtime.day_of_week]}</td>
+                                <td>{showtime.timeslot}</td>
+                                <td>
+                                    <Link to={`/rooms/${roomId}/edit-showtime/${showtime.id}`} className="btn btn-sm btn-secondary" title="Edit Showtime">
+                                        <i className="fas fa-edit"></i>
+                                    </Link>
+                                    <button onClick={() => handleDelete(showtime.id)} className="btn btn-sm btn-danger" title="Delete Showtime">
                                         <i className="fas fa-trash-alt"></i>
                                     </button>
                                 </td>

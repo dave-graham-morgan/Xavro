@@ -128,7 +128,7 @@ def update_room(room_id):
 # Fetch costs of a specific room
 @rooms_blueprint.route('/api/rooms/<int:room_id>/costs', methods=['GET'])
 @cross_origin()
-def get_room_costs(room_id):
+def get_all_room_costs(room_id):
     costs = RoomCost.query.filter_by(room_id=room_id).all()
     cost_list = [
         {
@@ -335,10 +335,10 @@ def get_all_showtimes(room_id):
     return jsonify([{
         'id': showtime.id,
         'room_id': showtime.room_id,
-        'booked': showtime.booked,
-        'bookable': showtime.bookable,
         'start_time': time_to_string(showtime.start_time),
-        'end_time': time_to_string(showtime.end_time)
+        'end_time': time_to_string(showtime.end_time),
+        'day_of_week': showtime.day_of_week,
+        'timeslot': showtime.timeslot
     } for showtime in showtimes])
 
 
@@ -349,10 +349,10 @@ def get_showtime(showtime_id):
     return jsonify({
         'id': showtime.id,
         'room_id': showtime.room_id,
-        'booked': showtime.booked,
-        'bookable': showtime.bookable,
         'start_time': time_to_string(showtime.start_time),
-        'end_time': time_to_string(showtime.end_time)
+        'end_time': time_to_string(showtime.end_time),
+        'day_of_week': showtime.day_of_week,
+        'timeslot': showtime.timeslot
     })
 
 
@@ -382,10 +382,10 @@ def update_showtime(room_id, showtime_id):
 
     try:
         showtime.room_id = room_id
-        showtime.booked = data['booked']
-        showtime.bookable = data['bookable']
         showtime.start_time = data['start_time']
         showtime.end_time = data['end_time']
+        showtime.day_of_week = data['day_of_week']
+        showtime.timeslot = data['timeslot']
 
         db.session.commit()
         return jsonify({'message': 'Showtime updated successfully'}), 201
@@ -405,10 +405,10 @@ def add_showtime(room_id):
     data = request.get_json()
     new_showtime = Showtime(
         room_id=room_id,
-        booked=data['booked'],
-        bookable=data['bookable'],
         start_time=data['start_time'],
-        end_time=data['end_time']
+        end_time=data['end_time'],
+        day_of_week=data['day_of_week'],
+        timeslot=data['timeslot']
     )
     try:
         db.session.add(new_showtime)  # TODO: put these in try except blocks!

@@ -1,7 +1,7 @@
 .booking-form-container {
     max-width: 600px;
     margin: 0 auto;
-    padding-top: 60px; /* Adjust this value to make sure it's not hidden by the menu */
+    padding-top: 60px; /* this keeps the booking form from being hidden by the menu */
 }
 
 .booking-form-container {

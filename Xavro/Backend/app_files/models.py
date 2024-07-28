@@ -28,6 +28,7 @@ class Customer(db.Model):
 
     bookings = relationship("Booking", back_populates="customer")
 
+
 class Room(db.Model):
     """room table"""
     __tablename__ = "rooms"
@@ -43,6 +44,8 @@ class Room(db.Model):
     description = db.Column(db.String, nullable=True)
 
     showtimes = relationship("Showtime", back_populates="room")
+    special_schedules = relationship("SpecialSchedule", back_populates="room")
+
 
 
 class RoomCost(db.Model):
@@ -84,13 +87,25 @@ class Showtime(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="cascade"), nullable=False)
-    booked = db.Column(db.Boolean, nullable=True)
-    bookable = db.Column(db.Boolean, nullable=True)
-    start_time = db.Column(db.Time, nullable=True)
-    end_time = db.Column(db.Time, nullable=True)
+    day_of_week = db.Column(db.Integer, nullable=False)  # 0 = Monday, 6 = Sunday
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    timeslot = db.Column(db.Integer, nullable=False)  # indicates which show of the day, easier to manage bookings
 
     room = relationship("Room", back_populates="showtimes")
-    bookings = relationship("Booking", back_populates="showtime", cascade="all, delete-orphan")
+
+
+class SpecialSchedule(db.Model):
+    """table to handle special schedules like closures or maintenance"""
+    __tablename__ = "special_schedules"
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="cascade"), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    closed = db.Column(db.Boolean, nullable=False, default=True)
+    reason = db.Column(db.String, nullable=True)
+
+    room = relationship("Room", back_populates="special_schedules")
 
 
 class Booking(db.Model):
@@ -98,13 +113,14 @@ class Booking(db.Model):
     __tablename__ = "bookings"
 
     id = db.Column(db.Integer, primary_key=True)
-    showtime_id = db.Column(db.Integer, db.ForeignKey('showtimes.id', ondelete="cascade"), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="cascade"), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete="cascade"), nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
     order_id = db.Column(db.String, nullable=False)  # this is the customer-facing ID
-    booking_date = db.Column(db.Date, nullable=False)  # added date field
+    booking_date = db.Column(db.Date, nullable=False)  # the date of the booking
+    start_time = db.Column(db.Time, nullable=False)  # the start time of the booking
+    end_time = db.Column(db.Time, nullable=False)  # the end time of the booking
 
-    showtime = relationship("Showtime", back_populates="bookings")
     customer = relationship("Customer", back_populates="bookings")
 
 

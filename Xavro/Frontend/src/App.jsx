@@ -12,6 +12,7 @@ import ShowtimeFormComponent from "./Components/Showtime/ShowtimeFormComponent.j
 import ShowtimeListComponent from "./Components/Showtime/ShowtimeListComponent.jsx";
 import CustomerListComponent from "./Components/Customer/CustomerListComponent.jsx";
 import CustomerFormComponent from "./Components/Customer/CustomerFormComponent.jsx";
+import Homepage from "./Components/Home/Homepage.jsx";
 
 const App = () => {
     return (
@@ -20,6 +21,8 @@ const App = () => {
                 <NavBar />
                 <div className="container">
                     <Routes>
+
+                        <Route path="/" element={<Homepage />} />
 
                         <Route path="/rooms" element={<RoomListComponent />} />
                         <Route path="/rooms/add-room" element={<RoomFormComponent/>} />
