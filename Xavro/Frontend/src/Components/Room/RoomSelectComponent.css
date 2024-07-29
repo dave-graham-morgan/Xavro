@@ -1,0 +1,16 @@
+.room-select-container {
+    margin-top: 20px; /* Adjust margin to your preference */
+    margin-bottom: 20px;
+}
+
+.room-select-container select {
+    width: 28%; /* Full width to fit within the container */
+}
+
+.room-select-container .default-option {
+    color: black;
+}
+
+.form-control:invalid .default-option {
+    display: none;
+}

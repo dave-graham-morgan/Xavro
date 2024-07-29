@@ -1,7 +1,13 @@
 import logging
+import os
 
 from flask import jsonify
-from .models import db, Room
+from .models import db, Room, Showtime, Booking
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
+NUM_OF_DAYS_TO_CHECK = int(os.getenv('NUM_OF_DAYS_TO_CHECK_AVAILABILITY'))
 
 
 def save_room_data(data):
@@ -75,3 +81,38 @@ def add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
         logging.error(f"Error saving to database: {e}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+def get_room_availability_service(session, room_id):
+    start_date = datetime.today()
+    end_date = start_date + timedelta(days=NUM_OF_DAYS_TO_CHECK)  # check availability for next x number of days
+
+    # Get all showtimes for the room
+    showtimes = session.query(Showtime).filter(Showtime.room_id == room_id).order_by(Showtime.day_of_week, Showtime.timeslot).all()
+
+    # Initialize a set to store available dates
+    available_dates = set()
+
+    # Iterate through the date range
+    for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
+        # Get the day of the week (0 = Monday, ..., 6 = Sunday)
+        day_of_week = single_date.weekday()
+
+        # Get the showtimes for the current day of the week
+        day_showtimes = [st for st in showtimes if st.day_of_week == day_of_week]
+
+        if not day_showtimes:
+            continue
+
+        # Get all bookings for the room on the current date
+        bookings = session.query(Booking).filter(Booking.room_id == room_id, Booking.show_date == single_date.date()).all()
+
+        # Check if there is at least one showtime without a booking
+        booked_timeslots = {booking.show_timeslot for booking in bookings}
+        if any(showtime.timeslot not in booked_timeslots for showtime in day_showtimes):
+            available_dates.add(single_date.date())
+
+    # Convert dates to strings using my favorite list comprehension
+    available_dates = [date.strftime('%Y-%m-%d') for date in available_dates]
+
+    return available_dates

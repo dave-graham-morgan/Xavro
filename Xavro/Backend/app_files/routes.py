@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from .services import save_room_data
+from .services import get_room_availability_service, save_room_data
 from .models import Room, db, RoomCost, Booking, Showtime, Customer
 from .utils import time_to_string
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
+
 
 # register the blueprints
 auth_blueprint = Blueprint('auth', __name__)
@@ -31,6 +33,24 @@ def add_room():
         return save_room_data(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>/availability', methods=['GET'])
+@cross_origin()
+def get_room_availability_route(room_id):
+
+    # create a new session (this took me forever to figure out)
+    Session = sessionmaker(bind=db.engine)
+    session = Session()
+
+    try:
+        room_avail = get_room_availability_service(session, room_id)
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return jsonify({'ERROR': str(e)}, 500)
+    finally:
+        session.close()
+    return jsonify(room_avail)
 
 
 @rooms_blueprint.route('/api/rooms/', methods=['GET'])
@@ -232,11 +252,13 @@ def get_all_bookings():
     bookings = Booking.query.all()
     return jsonify([{
         'id': booking.id,
-        'showtime_id': booking.showtime_id,
+        'room_id': booking.room_id,
         'customer_id': booking.customer_id,
         'guest_count': booking.guest_count,
         'order_id': booking.order_id,
-        'booking_date': booking.booking_date.strftime('%Y-%m-%d')
+        'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
+        'show_date': booking.show_date.strftime('%Y-%m-%d'),
+        'show_timeslot': booking.show_timeslot
     } for booking in bookings])
 
 
@@ -246,11 +268,13 @@ def get_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     return jsonify({
         'id': booking.id,
-        'showtime_id': booking.showtime_id,
+        'room_id': booking.room_id,
         'customer_id': booking.customer_id,
         'guest_count': booking.guest_count,
         'order_id': booking.order_id,
-        'booking_date': booking.booking_date.strftime('%Y-%m-%d')
+        'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
+        'show_date': booking.show_date.strftime('%Y-%m-%d'),
+        'show_timeslot': booking.show_timeslot
     })
 
 
@@ -260,11 +284,13 @@ def update_booking(booking_id):
     data = request.get_json()
     booking = Booking.query.get_or_404(booking_id)
     try:
-        booking.showtime_id = data['showtime_id'],
+        booking.room_id = data['room_id'],
         booking.customer_id = data['customer_id'],
         booking.guest_count = data['guest_count'],
         booking.order_id = data['order_id'],
-        booking.booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date()  # Use booking_date
+        booking.booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date(),
+        booking.show_date = datetime.strptime(data['show'], '%Y-%m-%d').date(),  # Use show
+        booking.show_timeslot = data['show_timeslot']
 
         db.session.commit()
         return jsonify({'message': 'Booking updated successfully'}), 201
@@ -305,15 +331,17 @@ def delete_booking(booking_id):
 def add_booking():
     data = request.get_json()
     try:
-        booking = Booking(
-            showtime_id=data['showtime_id'],
+        new_booking = Booking(
+            room_id=data['room_id'],
             customer_id=data['customer_id'],
             guest_count=data['guest_count'],
             order_id=data['order_id'],
-            booking_date=datetime.strptime(data['booking_date'], '%Y-%m-%d').date()  # Use booking_date
+            booking_date=datetime.strptime(data['booking_date'], '%Y-%m-%d').date(),  # Use booking_date
+            show_date=datetime.strptime(data['show_date'], '%Y-%m-%d').date(),  # Use booking_date
+            show_timeslot=data['show_timeslot']
         )
 
-        db.session.add(booking)
+        db.session.add(new_booking)
         db.session.commit()
         return jsonify({'message': 'Booking added successfully'}), 201
     except SQLAlchemyError as e:

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import BookingItemComponent from "./BookingItemComponent.jsx";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './BookingListComponent.css'
 
@@ -66,22 +67,26 @@ const BookingListComponent = () => {
                     <table className="table table-striped">
                         <thead>
                         <tr>
-                            <th>Showtime ID</th>
+                            <th>Room ID</th>
                             <th>Customer ID</th>
                             <th>Guest Count</th>
                             <th>Order ID</th>
                             <th>Booking Date</th>
+                            <th>Show Date</th>
+                            <th>Show Timeslot</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         {bookings.map(booking => (
                             <tr key={booking.id}>
-                                <td>{booking.showtime_id}</td>
+                                <td>{booking.room_id}</td>
                                 <td>{booking.customer_id}</td>
                                 <td>{booking.guest_count}</td>
                                 <td>{booking.order_id}</td>
                                 <td>{booking.booking_date}</td>
+                                <td>{booking.show_date}</td>
+                                <td>{booking.show_timeslot}</td>
                                 <td>
                                     <Link to={`/bookings/edit-booking/${booking.id}`} className="btn btn-sm btn-secondary" title="Edit Booking">
                                         <i className="fas fa-edit"></i>

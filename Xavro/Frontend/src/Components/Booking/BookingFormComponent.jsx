@@ -9,11 +9,13 @@ const BookingFormComponent = () => {
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const [bookingFormData, setBookingFormData] = useState({
-        showtime_id: '',
+        room_id: '',
         customer_id: '',
         guest_count: '',
         order_id: '',
-        booking_date: ''
+        booking_date: '',
+        show_date: '',
+        show_timeslot: ''
     });
 
     const [responseMessage, setResponseMessage] = useState('');
@@ -33,11 +35,13 @@ const BookingFormComponent = () => {
                     }
                     const data = await response.json();
                     setBookingFormData({
-                        showtime_id: data.showtime_id,
+                        room_id: data.room_id,
                         customer_id: data.customer_id,
                         guest_count: data.guest_count,
                         order_id: data.order_id,
-                        booking_date: data.booking_date
+                        booking_date: data.booking_date,
+                        show_date: data.show_date,
+                        show_timeslot: data.show_timeslot
                     });
                 } catch (error) {
                     console.error('Error fetching booking details:', error);
@@ -95,12 +99,12 @@ const BookingFormComponent = () => {
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label>Showtime ID:</label>
+                            <label>Room ID:</label>
                             <input
-                                type="text"
+                                type="number"
                                 className="form-control"
-                                name="showtime_id"
-                                value={bookingFormData.showtime_id}
+                                name="room_id"
+                                value={bookingFormData.room_id}
                                 onChange={handleChange}
                                 required
                             />
@@ -108,7 +112,7 @@ const BookingFormComponent = () => {
                         <div className="form-group">
                             <label>Customer ID:</label>
                             <input
-                                type="text"
+                                type="number"
                                 className="form-control"
                                 name="customer_id"
                                 value={bookingFormData.customer_id}
@@ -149,8 +153,31 @@ const BookingFormComponent = () => {
                                 required
                             />
                         </div>
+                        <div className="form-group">
+                            <label>Show Date:</label>
+                            <input
+                                type="date"
+                                className="form-control"
+                                name="show_date"
+                                value={bookingFormData.show_date}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Show Timeslot:</label>
+                            <input
+                                type="number"
+                                className="form-control"
+                                name="show_timeslot"
+                                value={bookingFormData.show_timeslot}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
                         <div className="d-flex justify-content-end mt-3">
-                            <button type="submit" className="btn btn-primary">{bookingId ? 'Update Booking' : 'Add Booking'}</button>
+                            <button type="submit"
+                                    className="btn btn-primary">{bookingId ? 'Update Booking' : 'Add Booking'}</button>
                         </div>
                     </form>
                 </div>

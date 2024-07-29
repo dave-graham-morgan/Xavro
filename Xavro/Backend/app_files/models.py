@@ -117,9 +117,9 @@ class Booking(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete="cascade"), nullable=False)
     guest_count = db.Column(db.Integer, nullable=False)
     order_id = db.Column(db.String, nullable=False)  # this is the customer-facing ID
-    booking_date = db.Column(db.Date, nullable=False)  # the date of the booking
-    start_time = db.Column(db.Time, nullable=False)  # the start time of the booking
-    end_time = db.Column(db.Time, nullable=False)  # the end time of the booking
+    booking_date = db.Column(db.Date, nullable=False)  # the date the booking was made
+    show_date = db.Column(db.Date, nullable=False)  # the date of the show
+    show_timeslot = db.Column(db.Integer, nullable=False)  # indicates which showtime was booked
 
     customer = relationship("Customer", back_populates="bookings")
 

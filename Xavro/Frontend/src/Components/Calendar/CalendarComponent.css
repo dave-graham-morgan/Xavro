@@ -10,18 +10,28 @@
     background: none;
 }
 
+.calendar-container {
+    margin-top: 20px; /* Adjust margin to your preference */
+}
+
 /* Highlight available dates */
 .calendar-container .highlight {
     font-weight: 900;
 }
 
-.calendar-container .available-date{
+.calendar-container .available-date {
     color: black;
     font-weight: bold;
 }
 
-/* Style for disabled dates */
+/* Style for dates with no availability */
 .calendar-container .disabled-date {
+    color: gray; /* Gray out dates before today or with no availability */
+    opacity: 0.6; /* Slightly fade out */
+}
+
+/* Style for dates in the past */
+.calendar-container .past-date {
     color: gray; /* Gray out dates before today or with no availability */
     opacity: 0.6; /* Slightly fade out */
 }
@@ -34,5 +44,16 @@
     border-radius: 50% !important; /* Make the background circular */
 }
 
+/* Style if today is selected */
+.calendar-container .today-selected {
+    background-color: #9d0a15 !important; /* Red background for the selected date */
+    color: white !important; /* White text for the selected date */
+    font-weight: 900; /* Bold text for the selected date */
+    border-radius: 50% !important; /* Make the background circular */
+    text-decoration: underline; /* Underline today */
+}
 
-
+/* Underline today's date */
+.calendar-container .today-date {
+    text-decoration: underline;
+}

@@ -1,0 +1,19 @@
+.booking-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.booking-item .card-title {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.booking-item .card-text {
+    margin-bottom: 5px;
+}
+
+.booking-item .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
