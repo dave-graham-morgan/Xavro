@@ -12,7 +12,7 @@ import ShowtimeFormComponent from "./Components/Showtime/ShowtimeFormComponent.j
 import ShowtimeListComponent from "./Components/Showtime/ShowtimeListComponent.jsx";
 import CustomerListComponent from "./Components/Customer/CustomerListComponent.jsx";
 import CustomerFormComponent from "./Components/Customer/CustomerFormComponent.jsx";
-import Homepage from "./Components/Home/Homepage.jsx";
+import Homepage from "./Components/Homepage/Homepage.jsx";
 
 const App = () => {
     return (

@@ -142,6 +142,7 @@ def get_room_timeslots_service(session, room_id, date_str):
         timeslot_list = [
             {
                 'id': timeslot.id,
+                'timeslot': timeslot.timeslot,
                 'roomName': timeslot.room.title,
                 'startTime': timeslot.start_time.strftime('%H:%M'),
                 'endTime': timeslot.end_time.strftime('%H:%M'),

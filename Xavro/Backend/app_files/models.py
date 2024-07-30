@@ -94,6 +94,14 @@ class Showtime(db.Model):
 
     room = relationship("Room", back_populates="showtimes")
 
+    def __repr__(self):
+        return (f"<Showtime(id={self.id}, "
+                f"room_id={self.room_id}, "
+                f"day_of_week={self.day_of_week}, "
+                f"start_time={self.start_time}, "
+                f"end_time={self.end_time}, "
+                f"timeslot={self.timeslot})>")
+
 
 class SpecialSchedule(db.Model):
     """table to handle special schedules like closures or maintenance"""
