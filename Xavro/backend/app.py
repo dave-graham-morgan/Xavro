@@ -5,15 +5,15 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
-from backend.config import ProductionConfig, DevelopmentConfig
-from backend.app_files.models import connect_db
+from .config import ProductionConfig, DevelopmentConfig
+from .app_files.models import connect_db
 
 # import the route blueprints
-from backend.app_files.routes.bookings import bookings_blueprint
-from backend.app_files.routes.customers import customers_blueprint
-from backend.app_files.routes.rooms import rooms_blueprint
-from backend.app_files.routes.showtimes import showtimes_blueprint
-from backend.app_files.routes.auth import auth_blueprint
+from .app_files.routes.bookings import bookings_blueprint
+from .app_files.routes.customers import customers_blueprint
+from .app_files.routes.rooms import rooms_blueprint
+from .app_files.routes.showtimes import showtimes_blueprint
+from .app_files.routes.auth import auth_blueprint
 
 
 load_dotenv()  # use this to read in environment variables below
