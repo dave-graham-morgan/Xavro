@@ -15,43 +15,41 @@ from backend.app_files.routes.rooms import rooms_blueprint
 from backend.app_files.routes.showtimes import showtimes_blueprint
 from backend.app_files.routes.auth import auth_blueprint
 
-
 load_dotenv()  # use this to read in environment variables below
 
-
 def create_app(config_class=ProductionConfig):
-    newApp = Flask(__name__)
+    app = Flask(__name__)
 
     # get allowed_origins from .env
     ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS')
 
     # set CORS globally
-    CORS(newApp, resources={r"/api/*": {
+    CORS(app, resources={r"/api/*": {
         "origins": ALLOWED_ORIGINS,
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "max_age": 3600
     }})
 
-    newApp.config.from_object(config_class)
+    app.config.from_object(config_class)
     logging.basicConfig(filename='app.log')
 
     # register blueprints
-    newApp.register_blueprint(auth_blueprint)
-    newApp.register_blueprint(rooms_blueprint)
-    newApp.register_blueprint(bookings_blueprint)
-    newApp.register_blueprint(showtimes_blueprint)
-    newApp.register_blueprint(customers_blueprint)
+    app.register_blueprint(auth_blueprint)
+    app.register_blueprint(rooms_blueprint)
+    app.register_blueprint(bookings_blueprint)
+    app.register_blueprint(showtimes_blueprint)
+    app.register_blueprint(customers_blueprint)
 
-    return newApp
+    connect_db(app)
 
+    return app
+
+# Create the application instance
+if os.environ.get('ENVIRONMENT') == 'DEV':
+    app = create_app(DevelopmentConfig)
+else:
+    app = create_app(ProductionConfig)
 
 if __name__ == '__main__':
-    if os.environ.get('ENVIRONMENT') == 'DEV':
-        app = create_app(DevelopmentConfig)
-        debug = True
-    else:
-        app = create_app(ProductionConfig)
-        debug = False
-    connect_db(app)
-    app.run(port=8080, debug=debug)
+    app.run(port=8080, debug=app.config['DEBUG'])
