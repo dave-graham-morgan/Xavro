@@ -112,7 +112,47 @@ def get_room_availability_service(session, room_id):
         if any(showtime.timeslot not in booked_timeslots for showtime in day_showtimes):
             available_dates.add(single_date.date())
 
-    # Convert dates to strings using my favorite list comprehension
+    # Convert dates to strings using my favorite thing, a list comprehension
     available_dates = [date.strftime('%Y-%m-%d') for date in available_dates]
 
     return available_dates
+
+
+def get_room_timeslots_service(session, room_id, date_str):
+    try:
+        # Convert the date string to a datetime object
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+
+        # Query the showtimes based on the room_id and day_of_week
+        timeslots = session.query(Showtime).filter(
+            Showtime.room_id == room_id,
+            Showtime.day_of_week == date_obj.weekday()
+        ).all()
+
+        # Get all bookings for the given room and date
+        bookings = session.query(Booking).filter(
+            Booking.room_id == room_id,
+            Booking.show_date == date_obj
+        ).all()
+
+        # Create a set of booked timeslots for quick lookup
+        booked_timeslots = {booking.show_timeslot for booking in bookings}
+
+        # Transform the timeslots into the format needed for the frontend
+        timeslot_list = [
+            {
+                'id': timeslot.id,
+                'roomName': timeslot.room.title,
+                'startTime': timeslot.start_time.strftime('%H:%M'),
+                'endTime': timeslot.end_time.strftime('%H:%M'),
+                'isBooked': timeslot.timeslot in booked_timeslots
+            }
+
+            for timeslot in timeslots
+        ]
+
+        return timeslot_list
+    except Exception as e:
+        print(f"Error in get_room_timeslots_service: {e}")
+        return []
+

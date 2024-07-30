@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from .services import get_room_availability_service, save_room_data
+from .services import get_room_availability_service, save_room_data, get_room_timeslots_service
 from .models import Room, db, RoomCost, Booking, Showtime, Customer
 from .utils import time_to_string
 from datetime import datetime
@@ -246,6 +246,25 @@ def get_room_cost(cost_id):
     })
 
 
+@rooms_blueprint.route('/api/rooms/<int:room_id>/timeslots', methods=['GET'])
+@cross_origin()
+def get_available_timeslots(room_id):
+    date = request.args.get('date')
+
+    # create a new session
+    Session = sessionmaker(bind=db.engine)
+    session = Session()
+
+    if not date:
+        return jsonify({'error': 'Date parameter is required'}), 400
+
+    try:
+        timeslots = get_room_timeslots_service(session, room_id, date)
+        return jsonify(timeslots)
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @bookings_blueprint.route('/api/bookings', methods=['GET'])
 @cross_origin()
 def get_all_bookings():
@@ -289,7 +308,7 @@ def update_booking(booking_id):
         booking.guest_count = data['guest_count'],
         booking.order_id = data['order_id'],
         booking.booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date(),
-        booking.show_date = datetime.strptime(data['show'], '%Y-%m-%d').date(),  # Use show
+        booking.show_date = datetime.strptime(data['show_date'], '%Y-%m-%d').date(),  # Use show
         booking.show_timeslot = data['show_timeslot']
 
         db.session.commit()
@@ -439,7 +458,7 @@ def add_showtime(room_id):
         timeslot=data['timeslot']
     )
     try:
-        db.session.add(new_showtime)  # TODO: put these in try except blocks!
+        db.session.add(new_showtime)
         db.session.commit()
         return jsonify({'message': 'Showtime added successfully'}), 201
     except SQLAlchemyError as e:

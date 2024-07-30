@@ -5,3 +5,13 @@
     padding: 20px;
 }
 
+.no-showtimes {
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    color: black;
+    font-size: 18px; /* Adjust the font size as needed */
+    max-width: 350px; /* Adjust the width to match the booking items */
+}
