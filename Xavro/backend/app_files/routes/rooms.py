@@ -70,6 +70,7 @@ def get_all_rooms():
         print(f'UNKNOWN ERROR {e}')
         return jsonify({'error': str(e)})
 
+
 # Fetch details of a specific room
 @rooms_blueprint.route('/api/rooms/<int:room_id>', methods=['GET'])
 @cross_origin()
