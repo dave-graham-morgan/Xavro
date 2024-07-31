@@ -148,7 +148,6 @@ const ParentComponent = () => {
     return (
         <div className="parent-component container mt-5">
             <h1>Book Your Adventure</h1>
-            <h2>url: {import.meta.env.VITE_API_BASE_URL}</h2>
             <div className="row">
                 <div className="col-12">
                     <RoomSelectComponent

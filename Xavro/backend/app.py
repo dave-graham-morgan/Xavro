@@ -17,11 +17,14 @@ from backend.app_files.routes.auth import auth_blueprint
 
 load_dotenv()  # use this to read in environment variables below
 
+
 def create_app(config_class=ProductionConfig):
     app = Flask(__name__)
 
     # get allowed_origins from .env
     ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS')
+    print('allowed origins below:')
+    print(ALLOWED_ORIGINS)
 
     # set CORS globally
     CORS(app, resources={r"/api/*": {
