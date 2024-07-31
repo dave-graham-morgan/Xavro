@@ -36,7 +36,6 @@ const ParentComponent = () => {
         try {
             // If customer has no ID, we need to create the customer first
             if (!customer.id) {
-                console.log('going to create a customer!')
                 const createCustomerResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/customers`, {
                     method: 'POST',
                     headers: {
@@ -149,6 +148,7 @@ const ParentComponent = () => {
     return (
         <div className="parent-component container mt-5">
             <h1>Book Your Adventure</h1>
+            <h2>url: {import.meta.env.VITE_API_BASE_URL}</h2>
             <div className="row">
                 <div className="col-12">
                     <RoomSelectComponent
