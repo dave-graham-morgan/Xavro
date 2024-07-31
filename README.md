@@ -1,5 +1,5 @@
 Xavro
-[Deployed URL]
+(https://xavro-1.onrender.com/)
 
 Overview
 Xavro is a web application designed to streamline the process of scheduling and booking escape rooms. The platform allows administrators to create and manage escape rooms and showtimes, while regular users can view availability and book rooms for their preferred showtimes.
