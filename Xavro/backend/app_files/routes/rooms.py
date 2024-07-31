@@ -44,20 +44,31 @@ def get_room_availability_route(room_id):
 @rooms_blueprint.route('/api/rooms/', methods=['GET'])
 @cross_origin()
 def get_all_rooms():
-    rooms = Room.query.all()
-    rooms_list = [{
-        'id': room.id,
-        'title': room.title,
-        'max_capacity': room.max_capacity,
-        'min_capacity': room.min_capacity,
-        'duration': room.duration,
-        'reset_buffer': room.reset_buffer,
-        'launch_date': room.launch_date,
-        'sunset_date': room.sunset_date,
-        'description': room.description
-    } for room in rooms]
-    return jsonify(rooms_list)
-
+    try:
+        print("trying to fetch rooms")
+        rooms = Room.query.all()
+        print("just fetched rooms successfully")
+        print(rooms)
+        rooms_list = [{
+            'id': room.id,
+            'title': room.title,
+            'max_capacity': room.max_capacity,
+            'min_capacity': room.min_capacity,
+            'duration': room.duration,
+            'reset_buffer': room.reset_buffer,
+            'launch_date': room.launch_date,
+            'sunset_date': room.sunset_date,
+            'description': room.description
+        } for room in rooms]
+        return jsonify(rooms_list)
+    except SQLAlchemyError as sql_error:
+        print("failed to fetch rooms")
+        print(f"sqlalchemy error! {sql_error}")
+        return jsonify({'error': str(sql_error)})
+    except Exception as e:
+        print("failed to fetch rooms")
+        print(f'UNKNOWN ERROR {e}')
+        return jsonify({'error': str(e)})
 
 # Fetch details of a specific room
 @rooms_blueprint.route('/api/rooms/<int:room_id>', methods=['GET'])
