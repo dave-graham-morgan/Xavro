@@ -138,7 +138,7 @@ const ParentComponent = () => {
 
     useEffect(() => {
         fetchAvailability(selectedRoomId);
-    }, [selectedRoomId]);
+    }, [selectedRoomId, selectedDate]);
 
     // update timeslots if user changes either the room or the date
     useEffect(() => {

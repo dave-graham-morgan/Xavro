@@ -11,8 +11,8 @@ const CalendarComponent = ({ selectedDate, onDateChange, availability }) => {
             // Highlight the selected date
             if (date.toDateString() === selectedDate.toDateString() && date.toDateString() === new Date().toDateString()) {
                 return 'today-selected';
-            }else if (date.toDateString() === selectedDate.toDateString()){
-                return 'selected-date'
+            } else if (date.toDateString() === selectedDate.toDateString()) {
+                return 'selected-date';
             }
 
             // Disable past dates
@@ -23,18 +23,16 @@ const CalendarComponent = ({ selectedDate, onDateChange, availability }) => {
             // Underline today's date, make sure its disabled if there is no availability
             if (date.toDateString() === new Date().toDateString() && !availability.includes(dateString)) {
                 return 'today-date disabled-date';
-            } else if (date.toDateString() === new Date().toDateString()){
-                return 'today-date'
+            } else if (date.toDateString() === new Date().toDateString()) {
+                return 'today-date';
             }
 
             // Disable dates with no availability
             if (!availability.includes(dateString)) {
                 return 'disabled-date';
-            }else {
+            } else {
                 return 'available-date';
             }
-
-
         }
     };
 

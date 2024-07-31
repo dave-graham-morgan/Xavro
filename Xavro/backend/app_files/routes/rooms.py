@@ -45,10 +45,7 @@ def get_room_availability_route(room_id):
 @cross_origin()
 def get_all_rooms():
     try:
-        print("trying to fetch rooms")
         rooms = Room.query.all()
-        print("just fetched rooms successfully")
-        print(rooms)
         rooms_list = [{
             'id': room.id,
             'title': room.title,
@@ -62,12 +59,8 @@ def get_all_rooms():
         } for room in rooms]
         return jsonify(rooms_list)
     except SQLAlchemyError as sql_error:
-        print("failed to fetch rooms")
-        print(f"sqlalchemy error! {sql_error}")
         return jsonify({'error': str(sql_error)})
     except Exception as e:
-        print("failed to fetch rooms")
-        print(f'UNKNOWN ERROR {e}')
         return jsonify({'error': str(e)})
 
 
