@@ -50,6 +50,7 @@ if os.environ.get('ENVIRONMENT') == 'DEV':
     app = create_app(DevelopmentConfig)
 else:
     app = create_app(ProductionConfig)
+    print("we are in production beyathces")
 
 if __name__ == '__main__':
     app.run(port=8080, debug=app.config['DEBUG'])
