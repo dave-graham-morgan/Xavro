@@ -120,6 +120,7 @@ const ParentComponent = () => {
         }
     };
 
+
     const fetchTimeslots = async (roomId, date) => {
         if (!roomId || !date) return;
 
@@ -143,7 +144,7 @@ const ParentComponent = () => {
     // update timeslots if user changes either the room or the date
     useEffect(() => {
         fetchTimeslots(selectedRoomId, selectedDate);
-    }, [selectedRoomId, selectedDate]);
+    }, [selectedRoomId, selectedDate]); //TODO: having selectedDate here is really inefficent.  Need to rework!!
 
     return (
         <div className="parent-component container mt-5">

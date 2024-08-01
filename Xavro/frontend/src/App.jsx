@@ -13,6 +13,8 @@ import ShowtimeListComponent from "./Components/Showtime/ShowtimeListComponent.j
 import CustomerListComponent from "./Components/Customer/CustomerListComponent.jsx";
 import CustomerFormComponent from "./Components/Customer/CustomerFormComponent.jsx";
 import Homepage from "./Components/Homepage/Homepage.jsx";
+import LoginFormComponent from "./Components/Auth/LoginFormComponent.jsx";
+import RegisterFormComponent from "./Components/Auth/RegisterFormComponent.jsx";
 
 const App = () => {
     return (
@@ -23,6 +25,9 @@ const App = () => {
                     <Routes>
 
                         <Route path="/" element={<Homepage />} />
+
+                        <Route path="/login" element={<LoginFormComponent />} />
+                        <Route path="/register" element={<RegisterFormComponent />} />
 
                         <Route path="/rooms" element={<RoomListComponent />} />
                         <Route path="/rooms/add-room" element={<RoomFormComponent/>} />

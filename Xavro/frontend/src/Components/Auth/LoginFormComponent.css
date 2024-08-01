@@ -1,0 +1,25 @@
+.login-card {
+    max-width: 400px;
+    margin-top: 100px;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-card .card-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sign-up-button {
+    top: 0;
+    right: 0;
+    margin-top: 10px;
+    margin-right: 10px;
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.sign-up-button:hover {
+    text-decoration: underline;
+}

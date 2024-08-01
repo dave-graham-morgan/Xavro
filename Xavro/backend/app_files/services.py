@@ -84,6 +84,10 @@ def add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
 
 
 def get_room_availability_service(session, room_id):
+    """TODO: REWORK! we don't want to be arbitrarily looking ahead num of days
+    instead we should load the entire month and then when the date changes
+    to another month we load that month.  Arbitrary days is not going towork"""
+
     start_date = datetime.today()
     end_date = start_date + timedelta(days=NUM_OF_DAYS_TO_CHECK)  # check availability for next x number of days
 

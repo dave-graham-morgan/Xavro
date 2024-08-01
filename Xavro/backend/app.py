@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 from backend.config import ProductionConfig, DevelopmentConfig
 from backend.app_files.models import connect_db
@@ -36,6 +37,10 @@ def create_app(config_class=ProductionConfig):
 
     app.config.from_object(config_class)
     logging.basicConfig(filename='app.log')
+
+    # Initialize JWT
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+    jwt = JWTManager(app)
 
     # register blueprints
     app.register_blueprint(auth_blueprint)
