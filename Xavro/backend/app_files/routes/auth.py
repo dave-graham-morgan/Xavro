@@ -1,4 +1,5 @@
 from ..models import db, User
+from ..utils import Roles
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -10,8 +11,16 @@ auth_blueprint = Blueprint('auth', __name__)
 @auth_blueprint.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    hashed_password = generate_password_hash(data['password'], method='sha256')
-    new_user = User(username=data['username'], password=hashed_password, email=data['email'], role='GUEST')
+
+    existing_user = User.query.filter(
+        (User.username == data['username']) | (User.email == data['email'])
+    ).first()
+    if existing_user:
+        return jsonify({'error': 'A user with that username or email already exists'}), 409
+
+    hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+    new_user = User(username=data['username'], password=hashed_password, email=data['email'], role=Roles.EMPLOYEE)
+
     try:
         print("Saving New User")
         db.session.add(new_user)
@@ -19,11 +28,13 @@ def register():
         print("New user saved successfully")
         return jsonify({'message': 'User registered successfully!'})
     except SQLAlchemyError as sql_error:
+        db.session.rollback()
         print(f"Error saving to database {sql_error}")
-        return jsonify({'error': 'Error saving new user to db'})
+        return jsonify({'error': 'Error saving new user to db'}), 500
     except Exception as e:
+        db.session.rollback()
         print(f"Something went wrong saving new user: {e}")
-        return jsonify({'error': 'Error something went wrong saving new user to db'})
+        return jsonify({'error': 'Error something went wrong saving new user to db'}), 500
 
 
 @auth_blueprint.route('/login', methods=['POST'])
@@ -33,9 +44,8 @@ def login():
     if not user or not check_password_hash(user.password, data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
 
-    # create the jwt and store username in the jwt identity
-    access_token = create_access_token(identity={'username': user.username})
-    return jsonify(access_token=access_token)
+    access_token = create_access_token(identity={'username': user.username, 'role': user.role.name})
+    return jsonify(access_token=access_token, role=user.role.name)
 
 
 @auth_blueprint.route('/protected', methods=['GET'])

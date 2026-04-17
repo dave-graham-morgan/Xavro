@@ -30,21 +30,21 @@ def save_room_data(data):
 
     except ValueError as e:
         logging.error(f"Error with datatypes not being integers: {e}")
-        return jsonify({"error": "Invalid data type"}), 200
+        return jsonify({"error": "Invalid data type"}), 400
 
     # Do validation even though UI will also do this
     # make sure none of the required fields are empty
     if not all([title, max_capacity, min_capacity, duration, reset_buffer]):
         logging.error("Error: missing required fields")
-        return jsonify({"Error": "Missing required fields"}), 200
+        return jsonify({"Error": "Missing required fields"}), 400
 
     # make sure min and max capacity are positive integers and min is less than max
     if not isinstance(max_capacity, int) or max_capacity <= 0:
         logging.error("Error: Max Capacity must be a positive integer")
-        return jsonify({"Error": "Max Capacity must be a positive integer"}), 200
+        return jsonify({"Error": "Max Capacity must be a positive integer"}), 400
     if not isinstance(min_capacity, int) or min_capacity <= 0:
         logging.error("Error: Min Capacity must be a positive integer")
-        return jsonify({"error": "Min Capacity must be a positive integer"}), 200
+        return jsonify({"error": "Min Capacity must be a positive integer"}), 400
     if min_capacity > max_capacity:
         logging.error("Error: Min Capacity must be less than Max Capacity")
         return jsonify({"error": "Min Capacity must be less than Max Capacity"}), 400
@@ -83,78 +83,82 @@ def add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
         return jsonify({"error": str(e)}), 500
 
 
-def get_room_availability_service(session, room_id):
+def compute_timeslots(start_time, end_time, interval_minutes, duration_minutes):
+    """Compute the list of (start_minutes, slot_start, slot_end) tuples for a schedule rule.
+    start_minutes is minutes since midnight — unique within a day, used as the booking key."""
+    slots = []
+    base = datetime(2000, 1, 1)
+    current = base.replace(hour=start_time.hour, minute=start_time.minute, second=0, microsecond=0)
+    deadline = base.replace(hour=end_time.hour, minute=end_time.minute, second=0, microsecond=0)
+    while current + timedelta(minutes=duration_minutes) <= deadline:
+        slot_end = current + timedelta(minutes=duration_minutes)
+        start_minutes = current.hour * 60 + current.minute
+        slots.append((start_minutes, current.time(), slot_end.time()))
+        current += timedelta(minutes=interval_minutes)
+    return slots
+
+
+def get_room_availability_service(room_id):
     """TODO: REWORK! we don't want to be arbitrarily looking ahead num of days
     instead we should load the entire month and then when the date changes
-    to another month we load that month.  Arbitrary days is not going towork"""
+    to another month we load that month.  Arbitrary days is not going to work"""
 
     start_date = datetime.today()
-    end_date = start_date + timedelta(days=NUM_OF_DAYS_TO_CHECK)  # check availability for next x number of days
+    end_date = start_date + timedelta(days=NUM_OF_DAYS_TO_CHECK)
 
-    # Get all showtimes for the room
-    showtimes = session.query(Showtime).filter(Showtime.room_id == room_id).order_by(Showtime.day_of_week, Showtime.timeslot).all()
+    showtimes = db.session.query(Showtime).filter(Showtime.room_id == room_id).all()
 
-    # Initialize a set to store available dates
     available_dates = set()
 
-    # Iterate through the date range
     for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
-        # Get the day of the week (0 = Monday, ..., 6 = Sunday)
         day_of_week = single_date.weekday()
+        day_rules = [st for st in showtimes if st.day_of_week == day_of_week]
 
-        # Get the showtimes for the current day of the week
-        day_showtimes = [st for st in showtimes if st.day_of_week == day_of_week]
-
-        if not day_showtimes:
+        if not day_rules:
             continue
 
-        # Get all bookings for the room on the current date
-        bookings = session.query(Booking).filter(Booking.room_id == room_id, Booking.show_date == single_date.date()).all()
-
-        # Check if there is at least one showtime without a booking
+        bookings = db.session.query(Booking).filter(
+            Booking.room_id == room_id,
+            Booking.show_date == single_date.date()
+        ).all()
         booked_timeslots = {booking.show_timeslot for booking in bookings}
-        if any(showtime.timeslot not in booked_timeslots for showtime in day_showtimes):
-            available_dates.add(single_date.date())
 
-    # Convert dates to strings using my favorite thing, a list comprehension
-    available_dates = [date.strftime('%Y-%m-%d') for date in available_dates]
+        for rule in day_rules:
+            slots = compute_timeslots(rule.start_time, rule.end_time, rule.interval_minutes, rule.room.duration)
+            if any(start_minutes not in booked_timeslots for start_minutes, _, _ in slots):
+                available_dates.add(single_date.date())
+                break
 
-    return available_dates
+    return [date.strftime('%Y-%m-%d') for date in available_dates]
 
 
-def get_room_timeslots_service(session, room_id, date_str):
+def get_room_timeslots_service(room_id, date_str):
     try:
-        # Convert the date string to a datetime object
         date_obj = datetime.strptime(date_str, '%Y-%m-%d')
 
-        # Query the showtimes based on the room_id and day_of_week
-        timeslots = session.query(Showtime).filter(
+        rules = db.session.query(Showtime).filter(
             Showtime.room_id == room_id,
             Showtime.day_of_week == date_obj.weekday()
         ).all()
 
-        # Get all bookings for the given room and date
-        bookings = session.query(Booking).filter(
+        bookings = db.session.query(Booking).filter(
             Booking.room_id == room_id,
-            Booking.show_date == date_obj
+            Booking.show_date == date_obj.date()
         ).all()
-
-        # Create a set of booked timeslots for quick lookup
         booked_timeslots = {booking.show_timeslot for booking in bookings}
 
-        # Transform the timeslots into the format needed for the frontend
-        timeslot_list = [
-            {
-                'id': timeslot.id,
-                'timeslot': timeslot.timeslot,
-                'roomName': timeslot.room.title,
-                'startTime': timeslot.start_time.strftime('%H:%M'),
-                'endTime': timeslot.end_time.strftime('%H:%M'),
-                'isBooked': timeslot.timeslot in booked_timeslots
-            }
-
-            for timeslot in timeslots
-        ]
+        timeslot_list = []
+        for rule in rules:
+            slots = compute_timeslots(rule.start_time, rule.end_time, rule.interval_minutes, rule.room.duration)
+            for start_minutes, slot_start, slot_end in slots:
+                timeslot_list.append({
+                    'id': start_minutes,
+                    'timeslot': start_minutes,
+                    'roomName': rule.room.title,
+                    'startTime': slot_start.strftime('%H:%M'),
+                    'endTime': slot_end.strftime('%H:%M'),
+                    'isBooked': start_minutes in booked_timeslots
+                })
 
         return timeslot_list
     except Exception as e:

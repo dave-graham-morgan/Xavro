@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import './CustomerListComponent.css';
+import { authFetch } from '../../utils/authFetch';
 
 const CustomerListComponent = () => {
     const navigate = useNavigate();
@@ -13,10 +11,8 @@ const CustomerListComponent = () => {
     useEffect(() => {
         const fetchCustomers = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/customers`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/customers`);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 setCustomers(data);
                 setLoading(false);
@@ -25,18 +21,15 @@ const CustomerListComponent = () => {
                 setLoading(false);
             }
         };
-
         fetchCustomers();
     }, []);
 
     const handleDelete = async (customerId) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/customers/${customerId}`, {
+            const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/customers/${customerId}`, {
                 method: 'DELETE',
             });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
             setCustomers(customers.filter(customer => customer.id !== customerId));
         } catch (error) {
             console.error('Error deleting customer:', error);
@@ -44,61 +37,76 @@ const CustomerListComponent = () => {
         }
     };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div>Error: {error.message}</div>;
-    }
+    if (loading) return <div className="text-slate-500 text-sm">Loading...</div>;
+    if (error) return <div className="text-red-500 text-sm">Error: {error.message}</div>;
 
     return (
-        <div className="customers-container container mt-5">
-            <h2>Customers List</h2>
-            <div className="d-flex justify-content-end mb-3">
-                <button onClick={() => navigate('/customers/add-customer')} className="btn btn-primary mr-2">
-                    <i className="fas fa-plus"></i> Add Customer
+        <div>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-800">Customers</h2>
+                <button
+                    onClick={() => navigate('/staff/customers/add')}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Customer
                 </button>
             </div>
+
             {customers.length === 0 ? (
-                <p>No customers available.</p>
+                <p className="text-slate-500 text-sm">No customers available.</p>
             ) : (
-                <div className="table-responsive">
-                    <table className="table table-striped">
-                        <thead>
-                        <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>Is Minor</th>
-                            <th>Is Banned</th>
-                            <th>Customer Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {customers.map(customer => (
-                            <tr key={customer.id}>
-                                <td>{customer.first_name}</td>
-                                <td>{customer.last_name}</td>
-                                <td>{customer.email}</td>
-                                <td>{customer.is_minor ? 'Yes' : 'No'}</td>
-                                <td>{customer.is_banned ? 'Yes' : 'No'}</td>
-                                <td>{customer.customer_notes}</td>
-                                <td>
-                                    <div className="btn-group" role="group">
-                                        <Link to={`/customers/${customer.id}/edit-customer`} className="btn btn-sm btn-secondary" title="Edit Customer">
-                                            <i className="fas fa-edit"></i>
-                                        </Link>
-                                        <button onClick={() => handleDelete(customer.id)} className="btn btn-sm btn-danger" title="Delete Customer">
-                                            <i className="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-[#0f172a] text-white">
+                                    <th className="px-4 py-3 text-left font-medium">First Name</th>
+                                    <th className="px-4 py-3 text-left font-medium">Last Name</th>
+                                    <th className="px-4 py-3 text-left font-medium">Email</th>
+                                    <th className="px-4 py-3 text-left font-medium">Minor</th>
+                                    <th className="px-4 py-3 text-left font-medium">Banned</th>
+                                    <th className="px-4 py-3 text-left font-medium">Notes</th>
+                                    <th className="px-4 py-3 text-left font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {customers.map(customer => (
+                                    <tr key={customer.id} className="border-b border-slate-100 hover:bg-slate-50">
+                                        <td className="px-4 py-3 text-slate-800 font-medium">{customer.first_name}</td>
+                                        <td className="px-4 py-3 text-slate-600">{customer.last_name}</td>
+                                        <td className="px-4 py-3 text-slate-600">{customer.email}</td>
+                                        <td className="px-4 py-3 text-slate-600">{customer.is_minor ? 'Yes' : 'No'}</td>
+                                        <td className="px-4 py-3">
+                                            {customer.is_banned
+                                                ? <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">Banned</span>
+                                                : <span className="text-slate-600">No</span>
+                                            }
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">{customer.customer_notes}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1.5">
+                                                <Link
+                                                    to={`/staff/customers/${customer.id}/edit`}
+                                                    title="Edit Customer"
+                                                    className="inline-flex items-center justify-center p-1.5 bg-slate-500 hover:bg-slate-600 text-white rounded transition-colors"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDelete(customer.id)}
+                                                    title="Delete Customer"
+                                                    className="inline-flex items-center justify-center p-1.5 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

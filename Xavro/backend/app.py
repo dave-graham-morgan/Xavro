@@ -19,6 +19,35 @@ from backend.app_files.routes.auth import auth_blueprint
 load_dotenv()  # use this to read in environment variables below
 
 
+def seed_admin(app):
+    """Create a default admin user if none exists. Credentials come from .env."""
+    with app.app_context():
+        from backend.app_files.models import db, User
+        from backend.app_files.utils import Roles
+        from werkzeug.security import generate_password_hash
+
+        if User.query.filter_by(role=Roles.ADMIN).first():
+            return  # admin already exists, nothing to do
+
+        username = os.getenv('ADMIN_USERNAME', 'admin')
+        password = os.getenv('ADMIN_PASSWORD')
+        email = os.getenv('ADMIN_EMAIL', 'admin@xavro.com')
+
+        if not password:
+            logging.warning('ADMIN_PASSWORD not set in .env — skipping admin seed')
+            return
+
+        admin = User(
+            username=username,
+            password=generate_password_hash(password, method='pbkdf2:sha256'),
+            email=email,
+            role=Roles.ADMIN
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print(f"Default admin user '{username}' created.")
+
+
 def create_app(config_class=ProductionConfig):
     app = Flask(__name__)
 
@@ -28,9 +57,9 @@ def create_app(config_class=ProductionConfig):
     print(ALLOWED_ORIGINS)
 
     # set CORS globally
-    CORS(app, resources={r"/api/*": {
+    CORS(app, resources={r"/*": {
         "origins": ALLOWED_ORIGINS,
-        "methods": ["GET", "POST", "OPTIONS"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "max_age": 3600
     }})
@@ -50,6 +79,7 @@ def create_app(config_class=ProductionConfig):
     app.register_blueprint(customers_blueprint)
 
     connect_db(app)
+    seed_admin(app)
 
     return app
 

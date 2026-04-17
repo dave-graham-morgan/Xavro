@@ -1,68 +1,84 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Form } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './LoginFormComponent.css'; // Custom styles
+import { useAuth } from '../../context/AuthContext';
 
-const LoginFormComponent = ({ onLoginSuccess }) => {
+const LoginFormComponent = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setError('');
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/login`, {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}login`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({username, password})
             });
 
             if (!response.ok) {
-                throw new Error('Failed to log in');
+                throw new Error('Invalid username or password');
             }
 
             const data = await response.json();
-            onLoginSuccess(data.access_token); // assuming the token is returned in the 'access_token' field
+            login(data.access_token, data.role);
+            navigate('/');
         } catch (error) {
             setError(error.message);
         }
     };
 
     return (
-        <div>
-            <Card className="login-card">
-                <Card.Body>
-                    <Card.Title>Login</Card.Title>
-                    <Form onSubmit={handleSubmit}>
-                        {error && <p className="text-danger">{error}</p>}
-                        <Form.Group controlId="formUsername">
-                            <Form.Label>Username</Form.Label>
-                            <Form.Control
+        <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
+            <div className="w-full max-w-md">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-semibold text-[#f1ece3] tracking-wide">Staff Portal</h1>
+                    <p className="text-[#b8afa3] text-sm mt-2 tracking-wider uppercase">Sign in to continue</p>
+                </div>
+                <div className="bg-[#1e293b] rounded-lg border border-[#c9a84c]/20 p-8">
+                    <form onSubmit={handleSubmit}>
+                        {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+                        <div className="mb-5">
+                            <label className="block text-sm font-medium text-[#b8afa3] mb-2 tracking-wide">Username</label>
+                            <input
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
+                                className="w-full px-3 py-2.5 bg-[#0f172a] border border-[#c9a84c]/20 rounded-md text-[#f1ece3] text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 focus:border-[#c9a84c]/40"
                             />
-                        </Form.Group>
-                        <Form.Group controlId="formPassword" className="mt-3">
-                            <Form.Label>Password</Form.Label>
-                            <Form.Control
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-[#b8afa3] mb-2 tracking-wide">Password</label>
+                            <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                className="w-full px-3 py-2.5 bg-[#0f172a] border border-[#c9a84c]/20 rounded-md text-[#f1ece3] text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 focus:border-[#c9a84c]/40"
                             />
-                        </Form.Group>
-                        <Button variant="primary" type="submit" className="mt-4 btn-sm">
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full py-2.5 bg-[#c9a84c] hover:bg-[#b8972f] text-[#0f172a] text-sm font-semibold tracking-widest uppercase transition-colors rounded"
+                        >
                             Login
-                        </Button>
-                    </Form>
-
-                </Card.Body>
-            </Card>
-            <a className="sign-up-button" onClick={() => navigate('/register')}>Register</a>
+                        </button>
+                    </form>
+                </div>
+                <p className="text-center mt-6 text-sm text-[#b8afa3]">
+                    Need an account?{' '}
+                    <button
+                        onClick={() => navigate('/register')}
+                        className="text-[#c9a84c] hover:text-[#b8972f] transition-colors"
+                    >
+                        Register
+                    </button>
+                </p>
+            </div>
         </div>
     );
 };

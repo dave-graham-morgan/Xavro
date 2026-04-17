@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from ..services import get_room_availability_service, save_room_data, get_room_timeslots_service
-from ..models import Room, db, RoomCost, Showtime
+from ..models import Room, db, RoomCost, Showtime, RoomImage
+from ..decorators import role_required
+from ..utils import Roles
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
 
 # register blueprint
 rooms_blueprint = Blueprint('rooms', __name__)
@@ -12,6 +13,7 @@ rooms_blueprint = Blueprint('rooms', __name__)
 
 @rooms_blueprint.route('/api/rooms', methods=['POST', 'OPTIONS'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def add_room():
     data = request.get_json()
 
@@ -26,18 +28,11 @@ def add_room():
 @rooms_blueprint.route('/api/rooms/<int:room_id>/availability', methods=['GET'])
 @cross_origin()
 def get_room_availability_route(room_id):
-
-    # create a new session (this took me forever to figure out)
-    Session = sessionmaker(bind=db.engine)
-    session = Session()
-
     try:
-        room_avail = get_room_availability_service(session, room_id)
+        room_avail = get_room_availability_service(room_id)
     except Exception as e:
         print(f"ERROR: {e}")
-        return jsonify({'ERROR': str(e)}, 500)
-    finally:
-        session.close()
+        return jsonify({'error': str(e)}), 500
     return jsonify(room_avail)
 
 
@@ -84,6 +79,7 @@ def get_room(room_id):
 
 @rooms_blueprint.route('/api/rooms/<int:room_id>', methods=['DELETE'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def delete_room(room_id):
     room = Room.query.get_or_404(room_id)
 
@@ -102,6 +98,7 @@ def delete_room(room_id):
 
 
 @rooms_blueprint.route('/api/rooms/<int:room_id>/associations', methods=['GET'])
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def check_room_associations(room_id):
     room_costs_count = RoomCost.query.filter_by(room_id=room_id).count()
     showtimes_count = Showtime.query.filter_by(room_id=room_id).count()
@@ -113,6 +110,7 @@ def check_room_associations(room_id):
 # Update a specific room
 @rooms_blueprint.route('/api/rooms/<int:room_id>', methods=['PUT'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def update_room(room_id):
     data = request.get_json()
     room = Room.query.get_or_404(room_id)
@@ -141,6 +139,7 @@ def update_room(room_id):
 # Fetch costs of a specific room
 @rooms_blueprint.route('/api/rooms/<int:room_id>/costs', methods=['GET'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def get_all_room_costs(room_id):
     costs = RoomCost.query.filter_by(room_id=room_id).all()
     cost_list = [
@@ -159,6 +158,7 @@ def get_all_room_costs(room_id):
 # Create a new room cost
 @rooms_blueprint.route('/api/rooms/<int:room_id>/costs', methods=['POST'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def create_room_cost(room_id):
     data = request.get_json()
     new_cost = RoomCost(
@@ -185,6 +185,7 @@ def create_room_cost(room_id):
 # Update an existing room cost
 @rooms_blueprint.route('/api/rooms/costs/<int:cost_id>', methods=['PUT'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def update_room_cost(cost_id):
     data = request.get_json()
     cost = RoomCost.query.get_or_404(cost_id)
@@ -208,6 +209,7 @@ def update_room_cost(cost_id):
 # delete a single room-cost
 @rooms_blueprint.route('/api/rooms/room-costs/<int:cost_id>', methods=['DELETE'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def delete_room_cost(cost_id):
     cost = RoomCost.query.get_or_404(cost_id)
     try:
@@ -227,6 +229,7 @@ def delete_room_cost(cost_id):
 # Fetch a single room cost
 @rooms_blueprint.route('/api/rooms/costs/<int:cost_id>', methods=['GET'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def get_room_cost(cost_id):
     cost = RoomCost.query.get_or_404(cost_id)
     return jsonify({
@@ -244,16 +247,63 @@ def get_room_cost(cost_id):
 def get_available_timeslots(room_id):
     date = request.args.get('date')
 
-    # create a new session
-    Session = sessionmaker(bind=db.engine)
-    session = Session()
-
     if not date:
         return jsonify({'error': 'Date parameter is required'}), 400
 
     try:
-        timeslots = get_room_timeslots_service(session, room_id, date)
+        timeslots = get_room_timeslots_service(room_id, date)
         return jsonify(timeslots)
     except Exception as e:
         print(f"ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>/images', methods=['GET'])
+@cross_origin()
+def get_room_images(room_id):
+    images = RoomImage.query.filter_by(room_id=room_id).order_by(RoomImage.display_order).all()
+    return jsonify([{
+        'id': img.id,
+        'image_url': img.image_url,
+        'alt_text': img.alt_text,
+        'display_order': img.display_order,
+        'is_primary': img.is_primary
+    } for img in images])
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>/images', methods=['POST'])
+@cross_origin()
+@role_required(Roles.ADMIN)
+def add_room_image(room_id):
+    data = request.get_json()
+    # if this is marked primary, clear any existing primary first
+    if data.get('is_primary'):
+        RoomImage.query.filter_by(room_id=room_id, is_primary=True).update({'is_primary': False})
+    new_image = RoomImage(
+        room_id=room_id,
+        image_url=data['image_url'],
+        alt_text=data.get('alt_text', ''),
+        display_order=data.get('display_order', 0),
+        is_primary=data.get('is_primary', False)
+    )
+    try:
+        db.session.add(new_image)
+        db.session.commit()
+        return jsonify({'id': new_image.id, 'message': 'Image added successfully'}), 201
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@rooms_blueprint.route('/api/rooms/images/<int:image_id>', methods=['DELETE'])
+@cross_origin()
+@role_required(Roles.ADMIN)
+def delete_room_image(image_id):
+    image = RoomImage.query.get_or_404(image_id)
+    try:
+        db.session.delete(image)
+        db.session.commit()
+        return jsonify({'message': 'Image deleted successfully'}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500

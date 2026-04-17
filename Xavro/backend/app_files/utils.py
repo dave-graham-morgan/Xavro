@@ -10,7 +10,6 @@ class PaymentStatus(Enum):
 class Roles(Enum):
     ADMIN = 1
     EMPLOYEE = 0
-    GUEST = 3
 
 
 def time_to_string(t):

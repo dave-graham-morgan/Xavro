@@ -1,18 +1,11 @@
-// PrivateRoute.jsx
+// PrivateRoute.jsx — requires any staff login (EMPLOYEE or ADMIN)
 import React from 'react';
-import { Route, Redirect } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-const PrivateRoute = ({ component: Component, ...rest }) => {
-    const isAuthenticated = localStorage.getItem('token') !== null;
-
-    return (
-        <Route
-            {...rest}
-            render={(props) =>
-                isAuthenticated ? <Component {...props} /> : <Redirect to="/login" />
-            }
-        />
-    );
+const PrivateRoute = () => {
+    const { token } = useAuth();
+    return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default PrivateRoute;

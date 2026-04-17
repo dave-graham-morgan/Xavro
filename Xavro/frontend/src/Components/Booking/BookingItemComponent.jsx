@@ -1,23 +1,29 @@
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './BookingItemComponent.css'; // Custom styles
 
 const BookingItemComponent = ({ roomName, startTime, endTime, showDate, isBooked, onBookNow }) => {
-    const formattedShowDate = new Date(showDate).toLocaleDateString([], {month: 'long', day: 'numeric', year: 'numeric' });
+    const formattedShowDate = new Date(showDate).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+
     return (
-        <div className={`booking-item card ${isBooked ? 'booked' : ''}`}>
-            <div className="card-body">
-                <div className="card-title-container">
-                    <h5 className="card-title">{roomName}</h5>
-                    <span className="show-date">{formattedShowDate}</span>
-                </div>
-                <div className="card-details">
-                    <p className="card-text">Showtime: {startTime} - {endTime}</p>
-                    <button className="btn btn-sm btn-primary" onClick={onBookNow} disabled={isBooked}>
-                        {isBooked ? 'Booked' : 'Book Now'}
-                    </button>
-                </div>
+        <div className={`flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+            isBooked
+                ? 'bg-slate-800/40 border-slate-700 opacity-60'
+                : 'bg-[#1e293b]/80 border-[#c9a84c]/20 hover:border-[#c9a84c]/40'
+        }`}>
+            <div>
+                <p className="text-sm font-medium text-[#f1ece3]">{startTime} – {endTime}</p>
+                <p className="text-xs text-[#b8afa3] mt-0.5">{formattedShowDate}</p>
             </div>
+            <button
+                onClick={onBookNow}
+                disabled={isBooked}
+                className={`px-4 py-1.5 text-xs font-semibold tracking-wider uppercase rounded transition-colors ${
+                    isBooked
+                        ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                        : 'bg-[#c9a84c] hover:bg-[#b8972f] text-[#0f172a]'
+                }`}
+            >
+                {isBooked ? 'Booked' : 'Book Now'}
+            </button>
         </div>
     );
 };

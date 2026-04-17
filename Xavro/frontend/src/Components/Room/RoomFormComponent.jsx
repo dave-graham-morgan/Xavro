@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { authFetch } from '../../utils/authFetch';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './RoomFormComponent.css'; // Import the new CSS file
+
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
+const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300";
 
 const RoomFormComponent = () => {
     const { roomId } = useParams();
@@ -20,17 +22,15 @@ const RoomFormComponent = () => {
 
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [formErrors, setFormErrors] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
         if (roomId) {
-            // Fetch room details and populate form for editing
             const fetchRoomDetails = async () => {
                 try {
                     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/${roomId}`);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     setRoomFormData({
                         title: data.title,
@@ -46,27 +46,18 @@ const RoomFormComponent = () => {
                     console.error('Error fetching room details:', error);
                 }
             };
-
             fetchRoomDetails();
         }
     }, [roomId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setRoomFormData({
-            ...roomFormData,
-            [name]: value
-        });
-    }
+        setRoomFormData({ ...roomFormData, [name]: value });
+    };
 
     const handleDateChange = (name, value) => {
-        setRoomFormData({
-            ...roomFormData,
-            [name]: value
-        });
-    }
-
-    const [formErrors, setFormErrors] = useState({});
+        setRoomFormData({ ...roomFormData, [name]: value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -82,16 +73,13 @@ const RoomFormComponent = () => {
                 resetBuffer: parseInt(roomFormData.resetBuffer, 10),
                 launchDate: roomFormData.launchDate ? roomFormData.launchDate.toISOString() : null,
                 sunsetDate: roomFormData.sunsetDate ? roomFormData.sunsetDate.toISOString() : null
-            }
+            };
 
             try {
-                const response = await fetch(
+                const response = await authFetch(
                     `${import.meta.env.VITE_API_BASE_URL}api/rooms${roomId ? `/${roomId}` : ''}`,
                     {
                         method: roomId ? 'PUT' : 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify(dataToSend)
                     }
                 );
@@ -100,16 +88,7 @@ const RoomFormComponent = () => {
                     setResponseMessage(data.message);
                     setErrorMessage('');
                     if (!roomId) {
-                        setRoomFormData({
-                            title: '',
-                            maxCapacity: '',
-                            minCapacity: '',
-                            duration: '',
-                            resetBuffer: '',
-                            launchDate: '',
-                            sunsetDate: '',
-                            description: ''
-                        });
+                        setRoomFormData({ title: '', maxCapacity: '', minCapacity: '', duration: '', resetBuffer: '', launchDate: '', sunsetDate: '', description: '' });
                     }
                 } else {
                     setErrorMessage(data.error);
@@ -119,146 +98,116 @@ const RoomFormComponent = () => {
                 console.error('Error submitting form to server:', error);
             }
         }
-    }
+    };
 
     const validateRoomForm = () => {
         const errors = {};
         if (!roomFormData.title) errors.title = 'Room Title is required';
-        if (!roomFormData.maxCapacity) {
-            errors.maxCapacity = 'Max Capacity is required';
-        } else if (!Number.isInteger(parseInt(roomFormData.maxCapacity, 10))) {
-            errors.maxCapacity = 'Max Capacity must be an integer';
-        }
-
-        if (!roomFormData.minCapacity) {
-            errors.minCapacity = 'Min Capacity is required';
-        } else if (!Number.isInteger(parseInt(roomFormData.minCapacity, 10))) {
-            errors.minCapacity = 'Min Capacity must be an integer';
-        }
-
-        if (!roomFormData.duration) {
-            errors.duration = 'Duration is required';
-        } else if (!Number.isInteger(parseInt(roomFormData.duration, 10))) {
-            errors.duration = 'Duration must be an integer';
-        }
-        if (!roomFormData.resetBuffer) {
-            errors.resetBuffer = 'Reset Buffer is required';
-        } else if (!Number.isInteger(parseInt(roomFormData.resetBuffer, 10))) {
-            errors.resetBuffer = 'Reset Buffer must be an integer';
-        }
-
+        if (!roomFormData.maxCapacity) errors.maxCapacity = 'Max Capacity is required';
+        else if (!Number.isInteger(parseInt(roomFormData.maxCapacity, 10))) errors.maxCapacity = 'Max Capacity must be an integer';
+        if (!roomFormData.minCapacity) errors.minCapacity = 'Min Capacity is required';
+        else if (!Number.isInteger(parseInt(roomFormData.minCapacity, 10))) errors.minCapacity = 'Min Capacity must be an integer';
+        if (!roomFormData.duration) errors.duration = 'Duration is required';
+        else if (!Number.isInteger(parseInt(roomFormData.duration, 10))) errors.duration = 'Duration must be an integer';
+        if (!roomFormData.resetBuffer) errors.resetBuffer = 'Reset Buffer is required';
+        else if (!Number.isInteger(parseInt(roomFormData.resetBuffer, 10))) errors.resetBuffer = 'Reset Buffer must be an integer';
         return errors;
-    }
+    };
 
     return (
-        <div className="container room-form-container mt-5">
-            {responseMessage && <p className="text-success">{responseMessage}</p>}
-            {errorMessage && <p className="text-danger">{errorMessage}</p>}
-            <div className="card">
-                <div className="card-header">
-                    <h2>{roomId ? 'Edit Room' : 'Add Room'}</h2>
+        <div className="max-w-2xl">
+            {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
+            {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
+
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200">
+                    <h2 className="text-lg font-semibold text-slate-800">{roomId ? 'Edit Room' : 'Add Room'}</h2>
                 </div>
-                <div className="card-body">
+                <div className="p-6">
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label>Room Name:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.title ? 'is-invalid' : ''}`}
-                                name="title"
-                                value={roomFormData.title}
-                                onChange={handleChange}
-                            />
-                            {formErrors.title && <div className="invalid-feedback">{formErrors.title}</div>}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Room Name</label>
+                            <input type="text" name="title" value={roomFormData.title} onChange={handleChange}
+                                className={formErrors.title ? inputErrorClass : inputClass} />
+                            {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
                         </div>
-                        <div className="form-group">
-                            <label>Max Capacity:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.maxCapacity ? 'is-invalid' : ''}`}
-                                name="maxCapacity"
-                                value={roomFormData.maxCapacity}
-                                onChange={handleChange}
-                            />
-                            {formErrors.maxCapacity && <div className="invalid-feedback">{formErrors.maxCapacity}</div>}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Max Capacity</label>
+                                <input type="text" name="maxCapacity" value={roomFormData.maxCapacity} onChange={handleChange}
+                                    className={formErrors.maxCapacity ? inputErrorClass : inputClass} />
+                                {formErrors.maxCapacity && <p className="text-red-500 text-xs mt-1">{formErrors.maxCapacity}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Min Capacity</label>
+                                <input type="text" name="minCapacity" value={roomFormData.minCapacity} onChange={handleChange}
+                                    className={formErrors.minCapacity ? inputErrorClass : inputClass} />
+                                {formErrors.minCapacity && <p className="text-red-500 text-xs mt-1">{formErrors.minCapacity}</p>}
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>Min Capacity:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.minCapacity ? 'is-invalid' : ''}`}
-                                name="minCapacity"
-                                value={roomFormData.minCapacity}
-                                onChange={handleChange}
-                            />
-                            {formErrors.minCapacity && <div className="invalid-feedback">{formErrors.minCapacity}</div>}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Duration (min)</label>
+                                <input type="text" name="duration" value={roomFormData.duration} onChange={handleChange}
+                                    className={formErrors.duration ? inputErrorClass : inputClass} />
+                                {formErrors.duration && <p className="text-red-500 text-xs mt-1">{formErrors.duration}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Reset Buffer (min)</label>
+                                <input type="text" name="resetBuffer" value={roomFormData.resetBuffer} onChange={handleChange}
+                                    className={formErrors.resetBuffer ? inputErrorClass : inputClass} />
+                                {formErrors.resetBuffer && <p className="text-red-500 text-xs mt-1">{formErrors.resetBuffer}</p>}
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>Duration:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.duration ? 'is-invalid' : ''}`}
-                                name="duration"
-                                value={roomFormData.duration}
-                                onChange={handleChange}
-                            />
-                            {formErrors.duration && <div className="invalid-feedback">{formErrors.duration}</div>}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Launch Date</label>
+                                <DatePicker
+                                    selected={roomFormData.launchDate}
+                                    className={inputClass}
+                                    name="launchDate"
+                                    onChange={(date) => handleDateChange('launchDate', date)}
+                                    placeholderText="Select Launch Date"
+                                    dateFormat="MMMM dd, yyyy"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Sunset Date</label>
+                                <DatePicker
+                                    selected={roomFormData.sunsetDate}
+                                    className={inputClass}
+                                    name="sunsetDate"
+                                    onChange={(date) => handleDateChange('sunsetDate', date)}
+                                    placeholderText="Select Sunset Date"
+                                    dateFormat="MMMM dd, yyyy"
+                                />
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>Reset Buffer:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.resetBuffer ? 'is-invalid' : ''}`}
-                                name="resetBuffer"
-                                value={roomFormData.resetBuffer}
-                                onChange={handleChange}
-                            />
-                            {formErrors.resetBuffer && <div className="invalid-feedback">{formErrors.resetBuffer}</div>}
-                        </div>
-                        <div className="form-group">
-                            <label>Launch Date:</label>
-                            <DatePicker
-                                selected={roomFormData.launchDate}
-                                className="form-control"
-                                name="launchDate"
-                                onChange={(date) => handleDateChange('launchDate', date)}
-                                placeholderText="Select Launch Date"
-                                dateFormat="MMMM dd, yyyy"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Sunset Date: </label>
-                            <DatePicker
-                                selected={roomFormData.sunsetDate}
-                                className="form-control"
-                                name="sunsetDate"
-                                onChange={(date) => handleDateChange('sunsetDate', date)}
-                                placeholderText="Select Sunset Date"
-                                dateFormat="MMMM dd, yyyy"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Description: </label>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                             <textarea
                                 name="description"
-                                className="form-control"
+                                rows={3}
+                                className={inputClass}
                                 value={roomFormData.description}
                                 onChange={handleChange}
                             />
                         </div>
-                        <div className="d-flex justify-content-end mt-3">
+                        <div className="flex justify-end">
                             <button type="submit"
-                                    className="btn btn-primary">{roomId ? 'Update Room' : 'Submit'}</button>
+                                className="px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded transition-colors">
+                                {roomId ? 'Update Room' : 'Add Room'}
+                            </button>
                         </div>
                     </form>
-
                 </div>
-
             </div>
-            <button onClick={() => navigate('/rooms')} className="btn btn-secondary mt-3">Return to Room List
+            <button onClick={() => navigate('/staff/rooms')}
+                className="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded transition-colors">
+                Return to Room List
             </button>
         </div>
     );
-}
+};
 
 export default RoomFormComponent;

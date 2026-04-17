@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from ..models import db, Showtime
-from ..utils import time_to_string
+from ..utils import time_to_string, Roles
+from ..decorators import role_required
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -19,7 +20,7 @@ def get_all_showtimes(room_id):
         'start_time': time_to_string(showtime.start_time),
         'end_time': time_to_string(showtime.end_time),
         'day_of_week': showtime.day_of_week,
-        'timeslot': showtime.timeslot
+        'interval_minutes': showtime.interval_minutes
     } for showtime in showtimes])
 
 
@@ -33,12 +34,13 @@ def get_showtime(showtime_id):
         'start_time': time_to_string(showtime.start_time),
         'end_time': time_to_string(showtime.end_time),
         'day_of_week': showtime.day_of_week,
-        'timeslot': showtime.timeslot
+        'interval_minutes': showtime.interval_minutes
     })
 
 
 @showtimes_blueprint.route('/api/showtimes/<int:showtime_id>', methods=['DELETE'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def delete_showtime(showtime_id):
     showtime = Showtime.query.get_or_404(showtime_id)
     try:
@@ -57,6 +59,7 @@ def delete_showtime(showtime_id):
 
 @showtimes_blueprint.route('/api/rooms/<int:room_id>/showtimes/<int:showtime_id>', methods=['PUT'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def update_showtime(room_id, showtime_id):
     data = request.get_json()
     showtime = Showtime.query.get_or_404(showtime_id)
@@ -66,7 +69,7 @@ def update_showtime(room_id, showtime_id):
         showtime.start_time = data['start_time']
         showtime.end_time = data['end_time']
         showtime.day_of_week = data['day_of_week']
-        showtime.timeslot = data['timeslot']
+        showtime.interval_minutes = data['interval_minutes']
 
         db.session.commit()
         return jsonify({'message': 'Showtime updated successfully'}), 201
@@ -82,6 +85,7 @@ def update_showtime(room_id, showtime_id):
 
 @showtimes_blueprint.route('/api/rooms/<int:room_id>/showtimes', methods=['POST'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def add_showtime(room_id):
     data = request.get_json()
     new_showtime = Showtime(
@@ -89,7 +93,7 @@ def add_showtime(room_id):
         start_time=data['start_time'],
         end_time=data['end_time'],
         day_of_week=data['day_of_week'],
-        timeslot=data['timeslot']
+        interval_minutes=data['interval_minutes']
     )
     try:
         db.session.add(new_showtime)

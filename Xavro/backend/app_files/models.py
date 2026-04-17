@@ -45,6 +45,7 @@ class Room(db.Model):
 
     showtimes = relationship("Showtime", back_populates="room")
     special_schedules = relationship("SpecialSchedule", back_populates="room")
+    images = relationship("RoomImage", back_populates="room", order_by="RoomImage.display_order")
 
 
 
@@ -82,15 +83,16 @@ class CustomerWaiver(db.Model):
 
 
 class Showtime(db.Model):
-    """table to hold the showtimes for each room"""
+    """Schedule rule for a room on a given day of week.
+    Available slots are computed dynamically from start_time, end_time, and interval_minutes."""
     __tablename__ = "showtimes"
 
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="cascade"), nullable=False)
     day_of_week = db.Column(db.Integer, nullable=False)  # 0 = Monday, 6 = Sunday
-    start_time = db.Column(db.Time, nullable=False)
-    end_time = db.Column(db.Time, nullable=False)
-    timeslot = db.Column(db.Integer, nullable=False)  # indicates which show of the day, easier to manage bookings
+    start_time = db.Column(db.Time, nullable=False)      # first slot start time
+    end_time = db.Column(db.Time, nullable=False)        # no slot may end after this time
+    interval_minutes = db.Column(db.Integer, nullable=False)  # minutes between slot start times
 
     room = relationship("Room", back_populates="showtimes")
 
@@ -100,7 +102,21 @@ class Showtime(db.Model):
                 f"day_of_week={self.day_of_week}, "
                 f"start_time={self.start_time}, "
                 f"end_time={self.end_time}, "
-                f"timeslot={self.timeslot})>")
+                f"interval_minutes={self.interval_minutes})>")
+
+
+class RoomImage(db.Model):
+    """Images for a room, supports multiple images with ordering"""
+    __tablename__ = "room_images"
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="cascade"), nullable=False)
+    image_url = db.Column(db.String, nullable=False)
+    alt_text = db.Column(db.String(200), nullable=True)
+    display_order = db.Column(db.Integer, nullable=False, default=0)
+    is_primary = db.Column(db.Boolean, nullable=False, default=False)
+
+    room = relationship("Room", back_populates="images")
 
 
 class SpecialSchedule(db.Model):
@@ -148,7 +164,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), nullable=False)
-    password = db.Column(db.String(61), nullable=False)
+    password = db.Column(db.String(256), nullable=False)
     email = db.Column(db.String(256), nullable=False)
     last_login = db.Column(db.DateTime, nullable=True)
-    roll = db.Column(db.Enum(Roles), default=Roles.GUEST, nullable=False)
+    role = db.Column(db.Enum(Roles), default=Roles.EMPLOYEE, nullable=False)

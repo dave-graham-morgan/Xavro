@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './CustomerFormComponent.css';
+import { authFetch } from '../../utils/authFetch';
+
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
+const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300";
 
 const CustomerFormComponent = () => {
     const { customerId } = useParams();
@@ -23,10 +25,8 @@ const CustomerFormComponent = () => {
         if (customerId) {
             const fetchCustomerDetails = async () => {
                 try {
-                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/customers/${customerId}`);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/customers/${customerId}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     setCustomerFormData({
                         first_name: data.first_name || '',
@@ -40,18 +40,14 @@ const CustomerFormComponent = () => {
                     console.error('Error fetching customer details:', error);
                 }
             };
-
             fetchCustomerDetails();
         }
     }, [customerId]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setCustomerFormData({
-            ...customerFormData,
-            [name]: type === 'checkbox' ? checked : value
-        });
-    }
+        setCustomerFormData({ ...customerFormData, [name]: type === 'checkbox' ? checked : value });
+    };
 
     const validateCustomerForm = () => {
         const errors = {};
@@ -59,7 +55,7 @@ const CustomerFormComponent = () => {
         if (!customerFormData.last_name) errors.last_name = 'Last Name is required';
         if (!customerFormData.email) errors.email = 'Email is required';
         return errors;
-    }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -68,13 +64,10 @@ const CustomerFormComponent = () => {
 
         if (Object.keys(errors).length === 0) {
             try {
-                const response = await fetch(
+                const response = await authFetch(
                     `${import.meta.env.VITE_API_BASE_URL}api/customers${customerId ? `/${customerId}` : ''}`,
                     {
                         method: customerId ? 'PUT' : 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify(customerFormData)
                     }
                 );
@@ -83,14 +76,7 @@ const CustomerFormComponent = () => {
                     setResponseMessage(data.message);
                     setErrorMessage('');
                     if (!customerId) {
-                        setCustomerFormData({
-                            first_name: '',
-                            last_name: '',
-                            email: '',
-                            is_minor: false,
-                            is_banned: false,
-                            customer_notes: ''
-                        });
+                        setCustomerFormData({ first_name: '', last_name: '', email: '', is_minor: false, is_banned: false, customer_notes: '' });
                     }
                 } else {
                     setErrorMessage(data.error);
@@ -100,94 +86,84 @@ const CustomerFormComponent = () => {
                 console.error('Error submitting form to server:', error);
             }
         }
-    }
+    };
 
     return (
-        <div className={`container mt-5 customerFormContainer`}>
-            {responseMessage && <p className="text-success">{responseMessage}</p>}
-            {errorMessage && <p className="text-danger">{errorMessage}</p>}
-            <div className="card">
-                <div className="card-header">
-                    <h2>{customerId ? 'Edit Customer' : 'Add Customer'}</h2>
+        <div className="max-w-lg">
+            {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
+            {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
+
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200">
+                    <h2 className="text-lg font-semibold text-slate-800">{customerId ? 'Edit Customer' : 'Add Customer'}</h2>
                 </div>
-                <div className="card-body">
+                <div className="p-6">
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label>First Name:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.first_name ? 'is-invalid' : ''}`}
-                                name="first_name"
-                                value={customerFormData.first_name}
-                                onChange={handleChange}
-                            />
-                            {formErrors.first_name && <div className="invalid-feedback">{formErrors.first_name}</div>}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                            <input type="text" name="first_name" value={customerFormData.first_name} onChange={handleChange}
+                                className={formErrors.first_name ? inputErrorClass : inputClass} />
+                            {formErrors.first_name && <p className="text-red-500 text-xs mt-1">{formErrors.first_name}</p>}
                         </div>
-                        <div className="form-group">
-                            <label>Last Name:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.last_name ? 'is-invalid' : ''}`}
-                                name="last_name"
-                                value={customerFormData.last_name}
-                                onChange={handleChange}
-                            />
-                            {formErrors.last_name && <div className="invalid-feedback">{formErrors.last_name}</div>}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                            <input type="text" name="last_name" value={customerFormData.last_name} onChange={handleChange}
+                                className={formErrors.last_name ? inputErrorClass : inputClass} />
+                            {formErrors.last_name && <p className="text-red-500 text-xs mt-1">{formErrors.last_name}</p>}
                         </div>
-                        <div className="form-group">
-                            <label>Email:</label>
-                            <input
-                                type="email"
-                                className={`form-control ${formErrors.email ? 'is-invalid' : ''}`}
-                                name="email"
-                                value={customerFormData.email}
-                                onChange={handleChange}
-                            />
-                            {formErrors.email && <div className="invalid-feedback">{formErrors.email}</div>}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                            <input type="email" name="email" value={customerFormData.email} onChange={handleChange}
+                                className={formErrors.email ? inputErrorClass : inputClass} />
+                            {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
                         </div>
-                        <div className="form-group form-check">
+                        <div className="mb-4 flex items-center gap-3">
                             <input
                                 type="checkbox"
-                                className="form-check-input"
+                                id="is_minor"
                                 name="is_minor"
                                 checked={customerFormData.is_minor}
                                 onChange={handleChange}
+                                className="w-4 h-4 rounded border-slate-300 text-[#c9a84c] focus:ring-[#c9a84c]/50"
                             />
-                            <label className="form-check-label">Minor</label>
+                            <label htmlFor="is_minor" className="text-sm text-slate-700">Minor</label>
                         </div>
-                        <div className="form-group form-check">
+                        <div className="mb-4 flex items-center gap-3">
                             <input
                                 type="checkbox"
-                                className="form-check-input"
+                                id="is_banned"
                                 name="is_banned"
                                 checked={customerFormData.is_banned}
                                 onChange={handleChange}
+                                className="w-4 h-4 rounded border-slate-300 text-[#c9a84c] focus:ring-[#c9a84c]/50"
                             />
-                            <label className="form-check-label">Banned</label>
+                            <label htmlFor="is_banned" className="text-sm text-slate-700">Banned</label>
                         </div>
-                        <div className="form-group">
-                            <label>Customer Notes:</label>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Customer Notes</label>
                             <textarea
-                                className="form-control"
                                 name="customer_notes"
+                                rows={3}
+                                className={inputClass}
                                 value={customerFormData.customer_notes}
                                 onChange={handleChange}
                             />
                         </div>
-                        <div className="d-flex justify-content-end mt-3">
+                        <div className="flex justify-end">
                             <button type="submit"
-                                    className="btn btn-primary">{customerId ? 'Update Customer' : 'Submit'}</button>
+                                className="px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded transition-colors">
+                                {customerId ? 'Update Customer' : 'Add Customer'}
+                            </button>
                         </div>
                     </form>
-
                 </div>
             </div>
-            <div className="d-flex mt-3">
-                <button onClick={() => navigate('/customers')} className="btn btn-secondary">Return to Customer List
-                </button>
-            </div>
+            <button onClick={() => navigate('/staff/customers')}
+                className="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded transition-colors">
+                Return to Customer List
+            </button>
         </div>
     );
-}
+};
 
 export default CustomerFormComponent;

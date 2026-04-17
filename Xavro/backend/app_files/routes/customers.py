@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from ..models import db, Customer
+from ..decorators import role_required
+from ..utils import Roles
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -10,6 +12,7 @@ customers_blueprint = Blueprint('customers', __name__)
 
 @customers_blueprint.route('/api/customers', methods=['GET'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def get_customers():
     # this route is used by the modal as well as the customer list component
     # if the query parms include and email we can assume we're in the modal and should return only one record
@@ -45,6 +48,7 @@ def get_customers():
 
 @customers_blueprint.route('/api/customers/<int:customer_id>', methods=['GET'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def get_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     return jsonify({
@@ -98,6 +102,7 @@ def add_customer():
 
 @customers_blueprint.route('/api/customers/<int:customer_id>', methods=['PUT'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def update_customer(customer_id):
     data = request.get_json()
     customer = Customer.query.get_or_404(customer_id)
@@ -123,6 +128,7 @@ def update_customer(customer_id):
 
 @customers_blueprint.route('/api/customers/<int:customer_id>', methods=['DELETE'])
 @cross_origin()
+@role_required(Roles.ADMIN)
 def delete_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     try:

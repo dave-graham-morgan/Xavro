@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { authFetch } from '../../utils/authFetch';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './RoomCostFormComponent.css';
+
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
+const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300";
 
 const RoomCostFormComponent = () => {
     const { roomId, costId } = useParams();
@@ -17,15 +19,14 @@ const RoomCostFormComponent = () => {
 
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [formErrors, setFormErrors] = useState({});
 
     useEffect(() => {
         if (costId) {
             const fetchCostDetails = async () => {
                 try {
-                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/costs/${costId}`);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/costs/${costId}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     setCostFormData({
                         guests_count: data.guests_count,
@@ -37,27 +38,18 @@ const RoomCostFormComponent = () => {
                     console.error('Error fetching cost details:', error);
                 }
             };
-
             fetchCostDetails();
         }
     }, [costId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setCostFormData({
-            ...costFormData,
-            [name]: value
-        });
-    }
+        setCostFormData({ ...costFormData, [name]: value });
+    };
 
     const handleDateChange = (name, value) => {
-        setCostFormData({
-            ...costFormData,
-            [name]: value
-        });
-    }
-
-    const [formErrors, setFormErrors] = useState({});
+        setCostFormData({ ...costFormData, [name]: value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -72,13 +64,10 @@ const RoomCostFormComponent = () => {
             };
 
             try {
-                const response = await fetch(
+                const response = await authFetch(
                     `${import.meta.env.VITE_API_BASE_URL}api/rooms${costId ? `/costs/${costId}` : `/${roomId}/costs`}`,
                     {
                         method: costId ? 'PUT' : 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify(dataToSend)
                     }
                 );
@@ -87,12 +76,7 @@ const RoomCostFormComponent = () => {
                     setResponseMessage(data.message);
                     setErrorMessage('');
                     if (!costId) {
-                        setCostFormData({
-                            guests_count: '',
-                            total_cost: '',
-                            start_date: '',
-                            end_date: ''
-                        });
+                        setCostFormData({ guests_count: '', total_cost: '', start_date: '', end_date: '' });
                     }
                 } else {
                     setErrorMessage(data.error);
@@ -102,95 +86,79 @@ const RoomCostFormComponent = () => {
                 console.error('Error submitting form to server:', error);
             }
         }
-    }
+    };
 
     const validateCostForm = () => {
         const errors = {};
-        if (!costFormData.guests_count) {
-            errors.guests_count = 'Guest count is required';
-        } else if (!Number.isInteger(parseInt(costFormData.guests_count, 10))) {
-            errors.guests_count = 'Guest count must be an integer';
-        }
-
-        if (!costFormData.total_cost) {
-            errors.total_cost = 'Total cost is required';
-        } else if (isNaN(parseFloat(costFormData.total_cost))) {
-            errors.total_cost = 'Total cost must be a number';
-        }
-
+        if (!costFormData.guests_count) errors.guests_count = 'Guest count is required';
+        else if (!Number.isInteger(parseInt(costFormData.guests_count, 10))) errors.guests_count = 'Guest count must be an integer';
+        if (!costFormData.total_cost) errors.total_cost = 'Total cost is required';
+        else if (isNaN(parseFloat(costFormData.total_cost))) errors.total_cost = 'Total cost must be a number';
         return errors;
-    }
-
-    const handleReturnClick = () => {
-        navigate(`/rooms/${roomId}/room-costs`);
-    }
+    };
 
     return (
-        <div className="room-cost-form-container container mt-5">
-            {responseMessage && <p className="text-success">{responseMessage}</p>}
-            {errorMessage && <p className="text-danger">{errorMessage}</p>}
+        <div className="max-w-lg">
+            {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
+            {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
 
-            <div className="card">
-                <div className="card-header">
-                    <h2>{costId ? 'Edit Room Cost' : 'Add Room Cost'}</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200">
+                    <h2 className="text-lg font-semibold text-slate-800">{costId ? 'Edit Room Cost' : 'Add Room Cost'}</h2>
                 </div>
-                <div className="card-body">
+                <div className="p-6">
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label>Guest Count:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.guests_count ? 'is-invalid' : ''}`}
-                                name="guests_count"
-                                value={costFormData.guests_count}
-                                onChange={handleChange}
-                            />
-                            {formErrors.guests_count &&
-                                <div className="invalid-feedback">{formErrors.guests_count}</div>}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Guest Count</label>
+                            <input type="text" name="guests_count" value={costFormData.guests_count} onChange={handleChange}
+                                className={formErrors.guests_count ? inputErrorClass : inputClass} />
+                            {formErrors.guests_count && <p className="text-red-500 text-xs mt-1">{formErrors.guests_count}</p>}
                         </div>
-                        <div className="form-group">
-                            <label>Total Cost:</label>
-                            <input
-                                type="text"
-                                className={`form-control ${formErrors.total_cost ? 'is-invalid' : ''}`}
-                                name="total_cost"
-                                value={costFormData.total_cost}
-                                onChange={handleChange}
-                            />
-                            {formErrors.total_cost && <div className="invalid-feedback">{formErrors.total_cost}</div>}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Total Cost ($)</label>
+                            <input type="text" name="total_cost" value={costFormData.total_cost} onChange={handleChange}
+                                className={formErrors.total_cost ? inputErrorClass : inputClass} />
+                            {formErrors.total_cost && <p className="text-red-500 text-xs mt-1">{formErrors.total_cost}</p>}
                         </div>
-                        <div className="form-group">
-                            <label>Start Date:</label>
-                            <DatePicker
-                                selected={costFormData.start_date}
-                                className="form-control"
-                                name="start_date"
-                                onChange={(date) => handleDateChange('start_date', date)}
-                                placeholderText="Select Start Date"
-                                dateFormat="MMMM dd, yyyy"
-                            />
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                                <DatePicker
+                                    selected={costFormData.start_date}
+                                    className={inputClass}
+                                    name="start_date"
+                                    onChange={(date) => handleDateChange('start_date', date)}
+                                    placeholderText="Select Start Date"
+                                    dateFormat="MMMM dd, yyyy"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                                <DatePicker
+                                    selected={costFormData.end_date}
+                                    className={inputClass}
+                                    name="end_date"
+                                    onChange={(date) => handleDateChange('end_date', date)}
+                                    placeholderText="Select End Date"
+                                    dateFormat="MMMM dd, yyyy"
+                                />
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>End Date: </label>
-                            <DatePicker
-                                selected={costFormData.end_date}
-                                className="form-control"
-                                name="end_date"
-                                onChange={(date) => handleDateChange('end_date', date)}
-                                placeholderText="Select End Date"
-                                dateFormat="MMMM dd, yyyy"
-                            />
-                        </div>
-                        <div className="d-flex justify-content-end mt-3">
+                        <div className="flex justify-end">
                             <button type="submit"
-                                    className="btn btn-primary">{costId ? 'Update Cost' : 'Add Cost'}</button>
+                                className="px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded transition-colors">
+                                {costId ? 'Update Cost' : 'Add Cost'}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
-            <button onClick={handleReturnClick} className="btn btn-secondary mb-3">Return to Room Costs</button>
+            <button onClick={() => navigate(`/staff/rooms/${roomId}/room-costs`)}
+                className="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded transition-colors">
+                Return to Room Costs
+            </button>
         </div>
     );
-}
+};
 
 export default RoomCostFormComponent;

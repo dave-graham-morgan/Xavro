@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from ..models import db,  Booking
+from ..models import db, Booking
+from ..decorators import role_required
+from ..utils import Roles
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -10,6 +12,7 @@ bookings_blueprint = Blueprint('bookings', __name__)
 
 @bookings_blueprint.route('/api/bookings', methods=['GET'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def get_all_bookings():
     bookings = Booking.query.all()
     return jsonify([{
@@ -26,6 +29,7 @@ def get_all_bookings():
 
 @bookings_blueprint.route('/api/bookings/<int:booking_id>', methods=['GET'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def get_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     return jsonify({
@@ -42,16 +46,17 @@ def get_booking(booking_id):
 
 @bookings_blueprint.route('/api/bookings/<int:booking_id>', methods=['PUT'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def update_booking(booking_id):
     data = request.get_json()
     booking = Booking.query.get_or_404(booking_id)
     try:
-        booking.room_id = data['room_id'],
-        booking.customer_id = data['customer_id'],
-        booking.guest_count = data['guest_count'],
-        booking.order_id = data['order_id'],
-        booking.booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date(),
-        booking.show_date = datetime.strptime(data['show_date'], '%Y-%m-%d').date(),  # Use show
+        booking.room_id = data['room_id']
+        booking.customer_id = data['customer_id']
+        booking.guest_count = data['guest_count']
+        booking.order_id = data['order_id']
+        booking.booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date()
+        booking.show_date = datetime.strptime(data['show_date'], '%Y-%m-%d').date()
         booking.show_timeslot = data['show_timeslot']
 
         db.session.commit()
@@ -73,10 +78,12 @@ def update_booking(booking_id):
 
 @bookings_blueprint.route('/api/bookings/<int:booking_id>', methods=['DELETE'])
 @cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
 def delete_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     try:
         db.session.delete(booking)
+        db.session.commit()
         return jsonify({'message': 'Booking deleted successfully'})
     except SQLAlchemyError as e:
         print(f"Error deleting booking from database: {e}")

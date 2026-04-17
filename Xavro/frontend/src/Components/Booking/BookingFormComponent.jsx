@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './BookingFormComponent.css'
+import { authFetch } from '../../utils/authFetch';
 
 // Note: this form is for creating bookings for dev only and will not be available in final app
+
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
 
 const BookingFormComponent = () => {
     const { bookingId } = useParams();
@@ -25,14 +26,8 @@ const BookingFormComponent = () => {
         if (bookingId) {
             const fetchBookingDetails = async () => {
                 try {
-                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/bookings/${bookingId}`, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/bookings/${bookingId}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     setBookingFormData({
                         room_id: data.room_id,
@@ -47,18 +42,14 @@ const BookingFormComponent = () => {
                     console.error('Error fetching booking details:', error);
                 }
             };
-
             fetchBookingDetails();
         }
     }, [bookingId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setBookingFormData({
-            ...bookingFormData,
-            [name]: value
-        });
-    }
+        setBookingFormData({ ...bookingFormData, [name]: value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -66,18 +57,15 @@ const BookingFormComponent = () => {
         const method = bookingId ? 'PUT' : 'POST';
 
         try {
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify(bookingFormData)
             });
             const data = await response.json();
             if (response.ok) {
                 setResponseMessage(data.message);
                 setErrorMessage('');
-                navigate('/bookings');
+                navigate('/staff/bookings');
             } else {
                 setErrorMessage(data.error);
                 setResponseMessage('');
@@ -86,104 +74,58 @@ const BookingFormComponent = () => {
             console.error('Error submitting form to server:', error);
             setErrorMessage('Error submitting form to server');
         }
-    }
+    };
 
     return (
-        <div className="booking-form-container container mt-5">
-            {responseMessage && <p className="text-success">{responseMessage}</p>}
-            {errorMessage && <p className="text-danger">{errorMessage}</p>}
-            <div className="card">
-                <div className="card-header">
-                    <h2>{bookingId ? 'Edit Booking' : 'Add Booking'}</h2>
+        <div className="max-w-lg">
+            {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
+            {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
+
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200">
+                    <h2 className="text-lg font-semibold text-slate-800">{bookingId ? 'Edit Booking' : 'Add Booking'}</h2>
                 </div>
-                <div className="card-body">
+                <div className="p-6">
                     <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label>Room ID:</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                name="room_id"
-                                value={bookingFormData.room_id}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Room ID</label>
+                            <input type="number" name="room_id" value={bookingFormData.room_id} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="form-group">
-                            <label>Customer ID:</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                name="customer_id"
-                                value={bookingFormData.customer_id}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Customer ID</label>
+                            <input type="number" name="customer_id" value={bookingFormData.customer_id} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="form-group">
-                            <label>Guest Count:</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                name="guest_count"
-                                value={bookingFormData.guest_count}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Guest Count</label>
+                            <input type="number" name="guest_count" value={bookingFormData.guest_count} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="form-group">
-                            <label>Order ID:</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                name="order_id"
-                                value={bookingFormData.order_id}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Order ID</label>
+                            <input type="text" name="order_id" value={bookingFormData.order_id} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="form-group">
-                            <label>Booking Date:</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                name="booking_date"
-                                value={bookingFormData.booking_date}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Booking Date</label>
+                            <input type="date" name="booking_date" value={bookingFormData.booking_date} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="form-group">
-                            <label>Show Date:</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                name="show_date"
-                                value={bookingFormData.show_date}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Show Date</label>
+                            <input type="date" name="show_date" value={bookingFormData.show_date} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="form-group">
-                            <label>Show Timeslot:</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                name="show_timeslot"
-                                value={bookingFormData.show_timeslot}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Show Timeslot</label>
+                            <input type="number" name="show_timeslot" value={bookingFormData.show_timeslot} onChange={handleChange} required className={inputClass} />
                         </div>
-                        <div className="d-flex justify-content-end mt-3">
+                        <div className="flex justify-end">
                             <button type="submit"
-                                    className="btn btn-primary">{bookingId ? 'Update Booking' : 'Add Booking'}</button>
+                                className="px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded transition-colors">
+                                {bookingId ? 'Update Booking' : 'Add Booking'}
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default BookingFormComponent;
