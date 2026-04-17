@@ -15,6 +15,7 @@ from backend.app_files.routes.customers import customers_blueprint
 from backend.app_files.routes.rooms import rooms_blueprint
 from backend.app_files.routes.showtimes import showtimes_blueprint
 from backend.app_files.routes.auth import auth_blueprint
+from backend.app_files.routes.users import users_blueprint
 
 load_dotenv()  # use this to read in environment variables below
 
@@ -77,6 +78,7 @@ def create_app(config_class=ProductionConfig):
     app.register_blueprint(bookings_blueprint)
     app.register_blueprint(showtimes_blueprint)
     app.register_blueprint(customers_blueprint)
+    app.register_blueprint(users_blueprint)
 
     connect_db(app)
     seed_admin(app)

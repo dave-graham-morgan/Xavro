@@ -10,9 +10,13 @@ import CustomerHomePage from "./Pages/CustomerHomePage.jsx";
 import CustomerRoomsPage from "./Pages/CustomerRoomsPage.jsx";
 import CustomerRoomDetailPage from "./Pages/CustomerRoomDetailPage.jsx";
 
+// Other
+import NotFoundPage from "./Pages/NotFoundPage.jsx";
+
 // Auth
 import LoginFormComponent from "./Components/Auth/LoginFormComponent.jsx";
-import RegisterFormComponent from "./Components/Auth/RegisterFormComponent.jsx";
+import ForgotPasswordPage from "./Pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./Pages/ResetPasswordPage.jsx";
 
 // Staff components
 import RoomListComponent from "./Components/Room/RoomListComponent.jsx";
@@ -25,6 +29,8 @@ import ShowtimeFormComponent from "./Components/Showtime/ShowtimeFormComponent.j
 import ShowtimeListComponent from "./Components/Showtime/ShowtimeListComponent.jsx";
 import CustomerListComponent from "./Components/Customer/CustomerListComponent.jsx";
 import CustomerFormComponent from "./Components/Customer/CustomerFormComponent.jsx";
+import UsersPage from "./Pages/UsersPage.jsx";
+import ProfilePage from "./Pages/ProfilePage.jsx";
 
 const App = () => {
     return (
@@ -39,10 +45,12 @@ const App = () => {
 
                     {/* ── Auth ── */}
                     <Route path="/login" element={<LoginFormComponent />} />
-                    <Route path="/register" element={<RegisterFormComponent />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                     {/* ── Staff: Employee+ ── */}
                     <Route element={<EmployeeRoute />}>
+                        <Route path="/staff/profile" element={<StaffLayout><ProfilePage /></StaffLayout>} />
                         <Route path="/staff/bookings" element={<StaffLayout><BookingListComponent /></StaffLayout>} />
                         <Route path="/staff/bookings/add" element={<StaffLayout><BookingFormComponent /></StaffLayout>} />
                         <Route path="/staff/bookings/edit/:bookingId" element={<StaffLayout><BookingFormComponent /></StaffLayout>} />
@@ -58,6 +66,7 @@ const App = () => {
 
                     {/* ── Staff: Admin only ── */}
                     <Route element={<AdminRoute />}>
+                        <Route path="/staff/users" element={<StaffLayout><UsersPage /></StaffLayout>} />
                         <Route path="/staff/rooms/add" element={<StaffLayout><RoomFormComponent /></StaffLayout>} />
                         <Route path="/staff/rooms/edit/:roomId" element={<StaffLayout><RoomFormComponent /></StaffLayout>} />
 
@@ -67,6 +76,9 @@ const App = () => {
                         <Route path="/staff/rooms/:roomId/showtimes/add" element={<StaffLayout><ShowtimeFormComponent /></StaffLayout>} />
                         <Route path="/staff/rooms/:roomId/showtimes/edit/:showtimeId" element={<StaffLayout><ShowtimeFormComponent /></StaffLayout>} />
                     </Route>
+
+                    {/* ── 404 ── */}
+                    <Route path="*" element={<NotFoundPage />} />
 
                 </Routes>
             </Router>

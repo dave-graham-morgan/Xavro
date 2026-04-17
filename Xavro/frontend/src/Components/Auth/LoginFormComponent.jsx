@@ -25,7 +25,7 @@ const LoginFormComponent = () => {
 
             const data = await response.json();
             login(data.access_token, data.role);
-            navigate('/');
+            navigate('/staff/rooms');
         } catch (error) {
             setError(error.message);
         }
@@ -70,12 +70,11 @@ const LoginFormComponent = () => {
                     </form>
                 </div>
                 <p className="text-center mt-6 text-sm text-[#b8afa3]">
-                    Need an account?{' '}
                     <button
-                        onClick={() => navigate('/register')}
+                        onClick={() => navigate('/forgot-password')}
                         className="text-[#c9a84c] hover:text-[#b8972f] transition-colors"
                     >
-                        Register
+                        Forgot your password?
                     </button>
                 </p>
             </div>

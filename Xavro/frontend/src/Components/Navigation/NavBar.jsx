@@ -7,6 +7,7 @@ const NavBar = () => {
     const navigate = useNavigate();
 
     const isEmployee = token && (role === 'EMPLOYEE' || role === 'ADMIN');
+    const isAdmin = token && role === 'ADMIN';
 
     const handleLogout = () => {
         logout();
@@ -47,15 +48,33 @@ const NavBar = () => {
                             >
                                 Bookings
                             </NavLink>
+                            {isAdmin && (
+                                <NavLink
+                                    to="/staff/users"
+                                    className={({ isActive }) =>
+                                        `text-sm font-medium transition-colors ${isActive ? 'text-[#c9a84c]' : 'text-slate-600 hover:text-slate-900'}`
+                                    }
+                                >
+                                    Users
+                                </NavLink>
+                            )}
                         </>
                     )}
 
                     {token ? (
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-slate-500">
-                                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                            </svg>
-                            <span className="text-xs text-slate-500">{role}</span>
+                            <NavLink
+                                to="/staff/profile"
+                                className={({ isActive }) =>
+                                    `flex items-center gap-1.5 transition-colors ${isActive ? 'text-[#c9a84c]' : 'text-slate-500 hover:text-slate-800'}`
+                                }
+                                title="My Profile"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                                </svg>
+                                <span className="text-xs">{role}</span>
+                            </NavLink>
                             <button
                                 onClick={handleLogout}
                                 className="text-xs px-3 py-1.5 border border-slate-300 text-slate-600 hover:bg-slate-100 rounded transition-colors"
