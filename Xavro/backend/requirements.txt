@@ -19,3 +19,4 @@ typing_extensions==4.12.2
 Werkzeug==3.0.3
 zipp==3.19.2
 resend==2.29.0
+cloudinary==1.44.2

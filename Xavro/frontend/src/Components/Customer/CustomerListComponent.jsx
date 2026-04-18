@@ -5,6 +5,7 @@ import { authFetch } from '../../utils/authFetch';
 const CustomerListComponent = () => {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
+    const [searchEmail, setSearchEmail] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -37,12 +38,16 @@ const CustomerListComponent = () => {
         }
     };
 
+    const filteredCustomers = searchEmail.length >= 2
+        ? customers.filter(c => c.email.toLowerCase().includes(searchEmail.toLowerCase()))
+        : customers;
+
     if (loading) return <div className="text-slate-500 text-sm">Loading...</div>;
     if (error) return <div className="text-red-500 text-sm">Error: {error.message}</div>;
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-slate-800">Customers</h2>
                 <button
                     onClick={() => navigate('/staff/customers/add')}
@@ -53,8 +58,23 @@ const CustomerListComponent = () => {
                 </button>
             </div>
 
-            {customers.length === 0 ? (
-                <p className="text-slate-500 text-sm">No customers available.</p>
+            {/* Email search */}
+            <div className="relative mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input
+                    type="text"
+                    placeholder="Search by email…"
+                    value={searchEmail}
+                    onChange={e => setSearchEmail(e.target.value)}
+                    className="w-full max-w-sm pl-9 pr-3 py-2 border border-slate-300 rounded-md text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 focus:border-[#c9a84c]/60"
+                />
+                {searchEmail.length > 0 && searchEmail.length < 2 && (
+                    <span className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 text-xs text-slate-400 whitespace-nowrap">Type one more character…</span>
+                )}
+            </div>
+
+            {filteredCustomers.length === 0 ? (
+                <p className="text-slate-500 text-sm">{searchEmail.length >= 2 ? `No customers match "${searchEmail}".` : 'No customers available.'}</p>
             ) : (
                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                     <div className="overflow-x-auto">
@@ -71,7 +91,7 @@ const CustomerListComponent = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {customers.map(customer => (
+                                {filteredCustomers.map(customer => (
                                     <tr key={customer.id} className="border-b border-slate-100 hover:bg-slate-50">
                                         <td className="px-4 py-3 text-slate-800 font-medium">{customer.first_name}</td>
                                         <td className="px-4 py-3 text-slate-600">{customer.last_name}</td>

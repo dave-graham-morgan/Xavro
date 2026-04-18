@@ -27,6 +27,8 @@ class Customer(db.Model):
     customer_notes = db.Column(db.String, nullable=True)
 
     bookings = relationship("Booking", back_populates="customer")
+    room_completions = relationship("CustomerRoomCompletion", back_populates="customer",
+                                   cascade="all, delete-orphan")
 
 
 class Room(db.Model):
@@ -46,6 +48,8 @@ class Room(db.Model):
     showtimes = relationship("Showtime", back_populates="room")
     special_schedules = relationship("SpecialSchedule", back_populates="room")
     images = relationship("RoomImage", back_populates="room", order_by="RoomImage.display_order")
+    completions = relationship("CustomerRoomCompletion", back_populates="room")
+    bookings = relationship("Booking", back_populates="room")
 
 
 
@@ -143,9 +147,49 @@ class Booking(db.Model):
     order_id = db.Column(db.String, nullable=False)  # this is the customer-facing ID
     booking_date = db.Column(db.Date, nullable=False)  # the date the booking was made
     show_date = db.Column(db.Date, nullable=False)  # the date of the show
-    show_timeslot = db.Column(db.Integer, nullable=False)  # indicates which showtime was booked
+    show_timeslot = db.Column(db.Integer, nullable=False)  # minutes since midnight; unique slot key
+    status = db.Column(db.String(20), nullable=False, default='confirmed')
+    # statuses: pending | confirmed | checked_in | in_progress | completed | cancelled
+    stripe_session_id = db.Column(db.String, nullable=True)
+    started_at = db.Column(db.DateTime, nullable=True)  # set when staff starts the room
 
     customer = relationship("Customer", back_populates="bookings")
+    room = relationship("Room", back_populates="bookings")
+    guests = relationship("BookingGuest", back_populates="booking", cascade="all, delete-orphan")
+
+
+class CustomerRoomCompletion(db.Model):
+    """Tracks which rooms a customer has completed and when.
+    A customer may complete the same room more than once — no uniqueness constraint.
+    room_id is SET NULL on room delete so history survives room retirement."""
+    __tablename__ = "customer_room_completions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete="CASCADE"), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete="SET NULL"), nullable=True)
+    completed_date = db.Column(db.Date, nullable=False)
+    completed_time = db.Column(db.Time, nullable=True)   # time of day the session started
+    succeeded = db.Column(db.Boolean, nullable=True)     # True = escaped, False = did not escape
+    duration_minutes = db.Column(db.Integer, nullable=True)
+
+    customer = relationship("Customer", back_populates="room_completions")
+    room = relationship("Room", back_populates="completions")
+
+
+class BookingGuest(db.Model):
+    """One record per person in a booking party.
+    Created when guests sign waivers (at booking time or on arrival).
+    waiver_signed_at is null until the waiver is signed."""
+    __tablename__ = "booking_guests"
+
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id', ondelete="CASCADE"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    is_minor = db.Column(db.Boolean, nullable=False, default=False)
+    waiver_signed_at = db.Column(db.DateTime, nullable=True)
+    signed_by_name = db.Column(db.String(100), nullable=True)  # guardian name when signing for a minor
+
+    booking = relationship("Booking", back_populates="guests")
 
 
 class Payments(db.Model):

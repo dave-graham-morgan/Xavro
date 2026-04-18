@@ -109,14 +109,7 @@ const RoomListComponent = () => {
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                                                 </Link>
-                                                <Link
-                                                    to={`/staff/rooms/${room.id}/showtimes`}
-                                                    title="Showtimes"
-                                                    className="text-slate-400 hover:text-[#c9a84c] transition-colors"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                                </Link>
-                                                <div title={room.hasAssociations ? 'Remove costs and/or showtimes before deleting' : 'Delete Room'}>
+                <div title={room.hasAssociations ? 'Remove costs and/or showtimes before deleting' : 'Delete Room'}>
                                                     <button
                                                         onClick={() => handleDelete(room.id)}
                                                         disabled={room.hasAssociations}

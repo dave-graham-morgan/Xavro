@@ -23,7 +23,8 @@ def get_all_bookings():
         'order_id': booking.order_id,
         'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
         'show_date': booking.show_date.strftime('%Y-%m-%d'),
-        'show_timeslot': booking.show_timeslot
+        'show_timeslot': booking.show_timeslot,
+        'status': booking.status
     } for booking in bookings])
 
 
@@ -40,7 +41,8 @@ def get_booking(booking_id):
         'order_id': booking.order_id,
         'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
         'show_date': booking.show_date.strftime('%Y-%m-%d'),
-        'show_timeslot': booking.show_timeslot
+        'show_timeslot': booking.show_timeslot,
+        'status': booking.status
     })
 
 

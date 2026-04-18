@@ -25,6 +25,14 @@ const NavBar = () => {
                     {isEmployee && (
                         <>
                             <NavLink
+                                to="/staff/checkin"
+                                className={({ isActive }) =>
+                                    `text-sm font-medium transition-colors ${isActive ? 'text-[#c9a84c]' : 'text-slate-600 hover:text-slate-900'}`
+                                }
+                            >
+                                Check-In
+                            </NavLink>
+                            <NavLink
                                 to="/staff/rooms"
                                 className={({ isActive }) =>
                                     `text-sm font-medium transition-colors ${isActive ? 'text-[#c9a84c]' : 'text-slate-600 hover:text-slate-900'}`

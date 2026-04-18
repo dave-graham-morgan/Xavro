@@ -25,12 +25,11 @@ import RoomCostListComponent from "./Components/RoomCost/RoomCostListComponent.j
 import RoomCostFormComponent from "./Components/RoomCost/RoomCostFormComponent.jsx";
 import BookingListComponent from "./Components/Booking/BookingListComponent.jsx";
 import BookingFormComponent from "./Components/Booking/BookingFormComponent.jsx";
-import ShowtimeFormComponent from "./Components/Showtime/ShowtimeFormComponent.jsx";
-import ShowtimeListComponent from "./Components/Showtime/ShowtimeListComponent.jsx";
 import CustomerListComponent from "./Components/Customer/CustomerListComponent.jsx";
 import CustomerFormComponent from "./Components/Customer/CustomerFormComponent.jsx";
 import UsersPage from "./Pages/UsersPage.jsx";
 import ProfilePage from "./Pages/ProfilePage.jsx";
+import CheckInPage from "./Pages/CheckInPage.jsx";
 
 const App = () => {
     return (
@@ -50,6 +49,7 @@ const App = () => {
 
                     {/* ── Staff: Employee+ ── */}
                     <Route element={<EmployeeRoute />}>
+                        <Route path="/staff/checkin" element={<StaffLayout><CheckInPage /></StaffLayout>} />
                         <Route path="/staff/profile" element={<StaffLayout><ProfilePage /></StaffLayout>} />
                         <Route path="/staff/bookings" element={<StaffLayout><BookingListComponent /></StaffLayout>} />
                         <Route path="/staff/bookings/add" element={<StaffLayout><BookingFormComponent /></StaffLayout>} />
@@ -61,7 +61,6 @@ const App = () => {
 
                         <Route path="/staff/rooms" element={<StaffLayout><RoomListComponent /></StaffLayout>} />
                         <Route path="/staff/rooms/:roomId/room-costs" element={<StaffLayout><RoomCostListComponent /></StaffLayout>} />
-                        <Route path="/staff/rooms/:roomId/showtimes" element={<StaffLayout><ShowtimeListComponent /></StaffLayout>} />
                     </Route>
 
                     {/* ── Staff: Admin only ── */}
@@ -73,8 +72,6 @@ const App = () => {
                         <Route path="/staff/rooms/:roomId/costs/add" element={<StaffLayout><RoomCostFormComponent /></StaffLayout>} />
                         <Route path="/staff/rooms/:roomId/costs/edit/:costId" element={<StaffLayout><RoomCostFormComponent /></StaffLayout>} />
 
-                        <Route path="/staff/rooms/:roomId/showtimes/add" element={<StaffLayout><ShowtimeFormComponent /></StaffLayout>} />
-                        <Route path="/staff/rooms/:roomId/showtimes/edit/:showtimeId" element={<StaffLayout><ShowtimeFormComponent /></StaffLayout>} />
                     </Route>
 
                     {/* ── 404 ── */}

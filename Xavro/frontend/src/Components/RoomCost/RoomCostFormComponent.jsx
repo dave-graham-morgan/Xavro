@@ -4,8 +4,8 @@ import { authFetch } from '../../utils/authFetch';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
-const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300";
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
+const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-300";
 
 const RoomCostFormComponent = () => {
     const { roomId, costId } = useParams();

@@ -25,7 +25,7 @@ const LoginFormComponent = () => {
 
             const data = await response.json();
             login(data.access_token, data.role);
-            navigate('/staff/rooms');
+            navigate('/staff/checkin');
         } catch (error) {
             setError(error.message);
         }

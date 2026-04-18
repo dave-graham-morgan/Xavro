@@ -148,6 +148,23 @@ const CustomerRoomDetailPage = () => {
                         className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/60 via-transparent to-transparent" />
+
+                    {displayImages.length > 1 && (
+                        <>
+                            <button
+                                onClick={() => setActiveImage(i => (i - 1 + displayImages.length) % displayImages.length)}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <button
+                                onClick={() => setActiveImage(i => (i + 1) % displayImages.length)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-colors"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </>
+                    )}
                 </div>
                 {displayImages.length > 1 && (
                     <div className="flex gap-3 mt-3">

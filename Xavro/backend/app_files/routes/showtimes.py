@@ -83,6 +83,42 @@ def update_showtime(room_id, showtime_id):
         return jsonify({'error': 'something really bad went wrong'}), 500
 
 
+@showtimes_blueprint.route('/api/rooms/<int:room_id>/showtimes/bulk', methods=['PUT'])
+@cross_origin()
+@role_required(Roles.ADMIN)
+def bulk_replace_showtimes(room_id):
+    """Replace all showtimes for a room in one shot.
+    interval_minutes is auto-computed as room.duration + room.reset_buffer."""
+    from ..models import Room
+    room = Room.query.get_or_404(room_id)
+    data = request.get_json()
+    if data is None:
+        return jsonify({'error': 'Request body missing or not valid JSON'}), 400
+    if not isinstance(data, list):
+        return jsonify({'error': 'Expected a JSON array'}), 400
+    interval_minutes = room.duration + room.reset_buffer
+    try:
+        Showtime.query.filter_by(room_id=room_id).delete()
+        for item in data:
+            st = Showtime(
+                room_id=room_id,
+                day_of_week=item['day_of_week'],
+                start_time=item['start_time'],
+                end_time=item['end_time'],
+                interval_minutes=interval_minutes
+            )
+            db.session.add(st)
+        db.session.commit()
+        return jsonify({'message': 'Schedule saved'}), 200
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        print(f'bulk_replace_showtimes unexpected error: {e}')
+        return jsonify({'error': str(e)}), 500
+
+
 @showtimes_blueprint.route('/api/rooms/<int:room_id>/showtimes', methods=['POST'])
 @cross_origin()
 @role_required(Roles.ADMIN)

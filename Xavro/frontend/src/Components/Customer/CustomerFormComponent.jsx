@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
 
-const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
-const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300";
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
+const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-300";
 
 const CustomerFormComponent = () => {
     const { customerId } = useParams();
@@ -54,6 +54,8 @@ const CustomerFormComponent = () => {
         if (!customerFormData.first_name) errors.first_name = 'First Name is required';
         if (!customerFormData.last_name) errors.last_name = 'Last Name is required';
         if (!customerFormData.email) errors.email = 'Email is required';
+        if (customerFormData.is_banned && !customerFormData.customer_notes.trim())
+            errors.customer_notes = 'A note is required when banning a customer';
         return errors;
     };
 
@@ -140,18 +142,24 @@ const CustomerFormComponent = () => {
                             <label htmlFor="is_banned" className="text-sm text-slate-700">Banned</label>
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Customer Notes</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                Customer Notes
+                                {customerFormData.is_banned && (
+                                    <span className="ml-1 text-red-500 text-xs font-normal">* required when banned</span>
+                                )}
+                            </label>
                             <textarea
                                 name="customer_notes"
                                 rows={3}
-                                className={inputClass}
+                                className={formErrors.customer_notes ? inputErrorClass : inputClass}
                                 value={customerFormData.customer_notes}
                                 onChange={handleChange}
                             />
+                            {formErrors.customer_notes && <p className="text-red-500 text-xs mt-1">{formErrors.customer_notes}</p>}
                         </div>
                         <div className="flex justify-end">
                             <button type="submit"
-                                className="px-4 py-2 bg-[#0f172a] hover:bg-[#1e293b] text-white text-sm font-medium rounded transition-colors">
+                                className="px-4 py-2 bg-[#c9a84c] hover:bg-[#b8972f] text-[#0f172a] text-sm font-semibold rounded transition-colors">
                                 {customerId ? 'Update Customer' : 'Add Customer'}
                             </button>
                         </div>
@@ -159,7 +167,7 @@ const CustomerFormComponent = () => {
                 </div>
             </div>
             <button onClick={() => navigate('/staff/customers')}
-                className="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded transition-colors">
+                className="mt-4 px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded transition-colors">
                 Return to Customer List
             </button>
         </div>

@@ -3,9 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { authFetch } from '../../utils/authFetch';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import RoomScheduleEditor from './RoomScheduleEditor';
+import RoomImageEditor from './RoomImageEditor';
 
-const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
-const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-300";
+const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
+const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-300";
 
 const RoomFormComponent = () => {
     const { roomId } = useParams();
@@ -23,6 +25,19 @@ const RoomFormComponent = () => {
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [formErrors, setFormErrors] = useState({});
+    const [msgFading, setMsgFading] = useState(false);
+
+    useEffect(() => {
+        const msg = responseMessage || errorMessage;
+        if (!msg) { setMsgFading(false); return; }
+        const fadeId  = setTimeout(() => setMsgFading(true),  2500);
+        const clearId = setTimeout(() => {
+            setResponseMessage('');
+            setErrorMessage('');
+            setMsgFading(false);
+        }, 3000);
+        return () => { clearTimeout(fadeId); clearTimeout(clearId); };
+    }, [responseMessage, errorMessage]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -87,8 +102,9 @@ const RoomFormComponent = () => {
                 if (response.ok) {
                     setResponseMessage(data.message);
                     setErrorMessage('');
-                    if (!roomId) {
-                        setRoomFormData({ title: '', maxCapacity: '', minCapacity: '', duration: '', resetBuffer: '', launchDate: '', sunsetDate: '', description: '' });
+                    if (!roomId && data.id) {
+                        // Redirect to edit page so the schedule editor becomes available
+                        navigate(`/staff/rooms/edit/${data.id}`);
                     }
                 } else {
                     setErrorMessage(data.error);
@@ -116,8 +132,8 @@ const RoomFormComponent = () => {
 
     return (
         <div className="max-w-2xl">
-            {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
-            {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
+            {responseMessage && <p className={`text-green-600 text-sm mb-4 transition-opacity duration-500 ${msgFading ? 'opacity-0' : 'opacity-100'}`}>{responseMessage}</p>}
+            {errorMessage && <p className={`text-red-600 text-sm mb-4 transition-opacity duration-500 ${msgFading ? 'opacity-0' : 'opacity-100'}`}>{errorMessage}</p>}
 
             <div className="bg-white rounded-lg shadow-sm border border-slate-200">
                 <div className="px-6 py-4 border-b border-slate-200">
@@ -202,8 +218,18 @@ const RoomFormComponent = () => {
                     </form>
                 </div>
             </div>
+            {roomId && (
+                <RoomScheduleEditor
+                    roomId={roomId}
+                    duration={roomFormData.duration}
+                    resetBuffer={roomFormData.resetBuffer}
+                />
+            )}
+
+            {roomId && <RoomImageEditor roomId={roomId} />}
+
             <button onClick={() => navigate('/staff/rooms')}
-                className="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded transition-colors">
+                className="mt-4 px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded transition-colors">
                 Return to Room List
             </button>
         </div>

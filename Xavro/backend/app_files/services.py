@@ -76,7 +76,7 @@ def add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
         # add the new room to the session and commit to db
         db.session.add(new_room)
         db.session.commit()
-        return jsonify({"message": "Room added successfully"}), 201
+        return jsonify({"message": "Room added successfully", "id": new_room.id}), 201
     except Exception as e:
         logging.error(f"Error saving to database: {e}")
         db.session.rollback()
@@ -119,13 +119,17 @@ def get_room_availability_service(room_id):
 
         bookings = db.session.query(Booking).filter(
             Booking.room_id == room_id,
-            Booking.show_date == single_date.date()
+            Booking.show_date == single_date.date(),
+            Booking.status != 'cancelled'
         ).all()
-        booked_timeslots = {booking.show_timeslot for booking in bookings}
+        # Sum guest_count per timeslot to support multiple bookings sharing a slot
+        guest_totals = {}
+        for b in bookings:
+            guest_totals[b.show_timeslot] = guest_totals.get(b.show_timeslot, 0) + b.guest_count
 
         for rule in day_rules:
             slots = compute_timeslots(rule.start_time, rule.end_time, rule.interval_minutes, rule.room.duration)
-            if any(start_minutes not in booked_timeslots for start_minutes, _, _ in slots):
+            if any(guest_totals.get(start_minutes, 0) < rule.room.max_capacity for start_minutes, _, _ in slots):
                 available_dates.add(single_date.date())
                 break
 
@@ -143,21 +147,27 @@ def get_room_timeslots_service(room_id, date_str):
 
         bookings = db.session.query(Booking).filter(
             Booking.room_id == room_id,
-            Booking.show_date == date_obj.date()
+            Booking.show_date == date_obj.date(),
+            Booking.status != 'cancelled'
         ).all()
-        booked_timeslots = {booking.show_timeslot for booking in bookings}
+        guest_totals = {}
+        for b in bookings:
+            guest_totals[b.show_timeslot] = guest_totals.get(b.show_timeslot, 0) + b.guest_count
 
         timeslot_list = []
         for rule in rules:
             slots = compute_timeslots(rule.start_time, rule.end_time, rule.interval_minutes, rule.room.duration)
             for start_minutes, slot_start, slot_end in slots:
+                booked = guest_totals.get(start_minutes, 0)
+                remaining = max(0, rule.room.max_capacity - booked)
                 timeslot_list.append({
                     'id': start_minutes,
                     'timeslot': start_minutes,
                     'roomName': rule.room.title,
                     'startTime': slot_start.strftime('%H:%M'),
                     'endTime': slot_end.strftime('%H:%M'),
-                    'isBooked': start_minutes in booked_timeslots
+                    'isBooked': remaining == 0,
+                    'available_spots': remaining
                 })
 
         return timeslot_list

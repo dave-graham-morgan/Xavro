@@ -1,3 +1,6 @@
+import os
+import cloudinary
+import cloudinary.uploader
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from ..services import get_room_availability_service, save_room_data, get_room_timeslots_service
@@ -6,6 +9,12 @@ from ..decorators import role_required
 from ..utils import Roles
 
 from sqlalchemy.exc import SQLAlchemyError
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+)
 
 # register blueprint
 rooms_blueprint = Blueprint('rooms', __name__)
@@ -255,6 +264,69 @@ def get_available_timeslots(room_id):
         return jsonify(timeslots)
     except Exception as e:
         print(f"ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>/images/upload', methods=['POST'])
+@cross_origin()
+@role_required(Roles.ADMIN)
+def upload_room_image(room_id):
+    """Accept a file upload, send to Cloudinary, store resulting URL."""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'Empty filename'}), 400
+    try:
+        result = cloudinary.uploader.upload(
+            file.read(),
+            folder=f'xavro/rooms/{room_id}',
+        )
+        image_url = result['secure_url']
+        public_id = result['public_id']
+
+        # If this is the first image for the room, make it primary automatically
+        existing_count = RoomImage.query.filter_by(room_id=room_id).count()
+        is_primary = existing_count == 0
+
+        if is_primary:
+            RoomImage.query.filter_by(room_id=room_id, is_primary=True).update({'is_primary': False})
+
+        new_image = RoomImage(
+            room_id=room_id,
+            image_url=image_url,
+            alt_text=request.form.get('alt_text', ''),
+            display_order=existing_count,
+            is_primary=is_primary
+        )
+        db.session.add(new_image)
+        db.session.commit()
+        return jsonify({
+            'id': new_image.id,
+            'image_url': image_url,
+            'alt_text': new_image.alt_text,
+            'display_order': new_image.display_order,
+            'is_primary': new_image.is_primary,
+            'public_id': public_id,
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@rooms_blueprint.route('/api/rooms/images/<int:image_id>/primary', methods=['PUT'])
+@cross_origin()
+@role_required(Roles.ADMIN)
+def set_primary_image(image_id):
+    """Set one image as primary, clearing any existing primary for that room."""
+    image = RoomImage.query.get_or_404(image_id)
+    try:
+        RoomImage.query.filter_by(room_id=image.room_id, is_primary=True).update({'is_primary': False})
+        image.is_primary = True
+        db.session.commit()
+        return jsonify({'message': 'Primary image updated'})
+    except SQLAlchemyError as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 
