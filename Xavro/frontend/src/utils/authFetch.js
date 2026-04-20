@@ -3,7 +3,7 @@
  * Use this for all requests to protected staff/admin API endpoints.
  */
 export const authFetch = (url, options = {}) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     return fetch(url, {
         ...options,
         headers: {

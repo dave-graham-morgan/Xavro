@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
+import { useUnsavedChanges } from '../../utils/useUnsavedChanges';
+import UnsavedChangesModal from '../UnsavedChangesModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -20,6 +22,8 @@ const RoomCostFormComponent = () => {
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [formErrors, setFormErrors] = useState({});
+    const [isDirty, setIsDirty] = useState(false);
+    const blocker = useUnsavedChanges(isDirty);
 
     useEffect(() => {
         if (costId) {
@@ -44,11 +48,13 @@ const RoomCostFormComponent = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setCostFormData({ ...costFormData, [name]: value });
+        setCostFormData(prev => ({ ...prev, [name]: value }));
+        setIsDirty(true);
     };
 
     const handleDateChange = (name, value) => {
-        setCostFormData({ ...costFormData, [name]: value });
+        setCostFormData(prev => ({ ...prev, [name]: value }));
+        setIsDirty(true);
     };
 
     const handleSubmit = async (e) => {
@@ -75,6 +81,7 @@ const RoomCostFormComponent = () => {
                 if (response.ok) {
                     setResponseMessage(data.message);
                     setErrorMessage('');
+                    setIsDirty(false);
                     if (!costId) {
                         setCostFormData({ guests_count: '', total_cost: '', start_date: '', end_date: '' });
                     }
@@ -98,13 +105,20 @@ const RoomCostFormComponent = () => {
     };
 
     return (
-        <div className="max-w-lg">
+        <div className="max-w-lg mx-auto">
+            <UnsavedChangesModal blocker={blocker} />
+
             {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
             {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
 
             <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="px-6 py-4 border-b border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-slate-800">{costId ? 'Edit Room Cost' : 'Add Room Cost'}</h2>
+                    {isDirty && (
+                        <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                            Unsaved changes
+                        </span>
+                    )}
                 </div>
                 <div className="p-6">
                     <form onSubmit={handleSubmit}>
@@ -123,25 +137,15 @@ const RoomCostFormComponent = () => {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-                                <DatePicker
-                                    selected={costFormData.start_date}
-                                    className={inputClass}
-                                    name="start_date"
+                                <DatePicker selected={costFormData.start_date} className={inputClass} name="start_date"
                                     onChange={(date) => handleDateChange('start_date', date)}
-                                    placeholderText="Select Start Date"
-                                    dateFormat="MMMM dd, yyyy"
-                                />
+                                    placeholderText="Select Start Date" dateFormat="MMMM dd, yyyy" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-                                <DatePicker
-                                    selected={costFormData.end_date}
-                                    className={inputClass}
-                                    name="end_date"
+                                <DatePicker selected={costFormData.end_date} className={inputClass} name="end_date"
                                     onChange={(date) => handleDateChange('end_date', date)}
-                                    placeholderText="Select End Date"
-                                    dateFormat="MMMM dd, yyyy"
-                                />
+                                    placeholderText="Select End Date" dateFormat="MMMM dd, yyyy" />
                             </div>
                         </div>
                         <div className="flex justify-end">
@@ -154,7 +158,7 @@ const RoomCostFormComponent = () => {
                 </div>
             </div>
             <button onClick={() => navigate(`/staff/rooms/${roomId}/room-costs`)}
-                className="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium rounded transition-colors">
+                className="mt-4 px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded transition-colors">
                 Return to Room Costs
             </button>
         </div>

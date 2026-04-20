@@ -112,6 +112,7 @@ const UsersPage = () => {
             setTimeout(() => setResetSent(prev => { const n = { ...prev }; delete n[user.id]; return n; }), 4000);
         } catch (e) {
             setError(e.message);
+            setTimeout(() => setError(''), 4000);
         }
     };
 

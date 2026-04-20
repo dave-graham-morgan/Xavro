@@ -20,6 +20,7 @@ const ForgotPasswordPage = () => {
             setSubmitted(true);
         } catch {
             setError('Something went wrong. Please try again.');
+            setTimeout(() => setError(''), 4000);
         }
     };
 
@@ -70,7 +71,7 @@ const ForgotPasswordPage = () => {
 
                 <p className="text-center mt-6 text-sm text-[#b8afa3]">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/xavro')}
                         className="text-[#c9a84c] hover:text-[#b8972f] transition-colors"
                     >
                         ← Back to login

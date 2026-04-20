@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
+import { useUnsavedChanges } from '../../utils/useUnsavedChanges';
+import UnsavedChangesModal from '../UnsavedChangesModal';
 
 const inputClass = "w-full px-3 py-2 border border-slate-300 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50";
 const inputErrorClass = "w-full px-3 py-2 border border-red-400 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-300";
@@ -20,6 +22,8 @@ const CustomerFormComponent = () => {
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [formErrors, setFormErrors] = useState({});
+    const [isDirty, setIsDirty] = useState(false);
+    const blocker = useUnsavedChanges(isDirty);
 
     useEffect(() => {
         if (customerId) {
@@ -46,7 +50,8 @@ const CustomerFormComponent = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setCustomerFormData({ ...customerFormData, [name]: type === 'checkbox' ? checked : value });
+        setCustomerFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        setIsDirty(true);
     };
 
     const validateCustomerForm = () => {
@@ -77,6 +82,7 @@ const CustomerFormComponent = () => {
                 if (response.ok) {
                     setResponseMessage(data.message);
                     setErrorMessage('');
+                    setIsDirty(false);
                     if (!customerId) {
                         setCustomerFormData({ first_name: '', last_name: '', email: '', is_minor: false, is_banned: false, customer_notes: '' });
                     }
@@ -91,13 +97,20 @@ const CustomerFormComponent = () => {
     };
 
     return (
-        <div className="max-w-lg">
+        <div className="max-w-lg mx-auto">
+            <UnsavedChangesModal blocker={blocker} />
+
             {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
             {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
 
             <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="px-6 py-4 border-b border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-slate-800">{customerId ? 'Edit Customer' : 'Add Customer'}</h2>
+                    {isDirty && (
+                        <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                            Unsaved changes
+                        </span>
+                    )}
                 </div>
                 <div className="p-6">
                     <form onSubmit={handleSubmit}>
@@ -120,25 +133,13 @@ const CustomerFormComponent = () => {
                             {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
                         </div>
                         <div className="mb-4 flex items-center gap-3">
-                            <input
-                                type="checkbox"
-                                id="is_minor"
-                                name="is_minor"
-                                checked={customerFormData.is_minor}
-                                onChange={handleChange}
-                                className="w-4 h-4 rounded border-slate-300 text-[#c9a84c] focus:ring-[#c9a84c]/50"
-                            />
+                            <input type="checkbox" id="is_minor" name="is_minor" checked={customerFormData.is_minor}
+                                onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-[#c9a84c] focus:ring-[#c9a84c]/50" />
                             <label htmlFor="is_minor" className="text-sm text-slate-700">Minor</label>
                         </div>
                         <div className="mb-4 flex items-center gap-3">
-                            <input
-                                type="checkbox"
-                                id="is_banned"
-                                name="is_banned"
-                                checked={customerFormData.is_banned}
-                                onChange={handleChange}
-                                className="w-4 h-4 rounded border-slate-300 text-[#c9a84c] focus:ring-[#c9a84c]/50"
-                            />
+                            <input type="checkbox" id="is_banned" name="is_banned" checked={customerFormData.is_banned}
+                                onChange={handleChange} className="w-4 h-4 rounded border-slate-300 text-[#c9a84c] focus:ring-[#c9a84c]/50" />
                             <label htmlFor="is_banned" className="text-sm text-slate-700">Banned</label>
                         </div>
                         <div className="mb-4">
@@ -148,13 +149,9 @@ const CustomerFormComponent = () => {
                                     <span className="ml-1 text-red-500 text-xs font-normal">* required when banned</span>
                                 )}
                             </label>
-                            <textarea
-                                name="customer_notes"
-                                rows={3}
+                            <textarea name="customer_notes" rows={3}
                                 className={formErrors.customer_notes ? inputErrorClass : inputClass}
-                                value={customerFormData.customer_notes}
-                                onChange={handleChange}
-                            />
+                                value={customerFormData.customer_notes} onChange={handleChange} />
                             {formErrors.customer_notes && <p className="text-red-500 text-xs mt-1">{formErrors.customer_notes}</p>}
                         </div>
                         <div className="flex justify-end">

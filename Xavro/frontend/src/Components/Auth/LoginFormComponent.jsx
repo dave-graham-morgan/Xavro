@@ -7,7 +7,13 @@ const LoginFormComponent = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, token } = useAuth();
+
+    // Already logged in — skip the login form
+    if (token) {
+        navigate('/staff/checkin', { replace: true });
+        return null;
+    }
 
     const handleSubmit = async (event) => {
         event.preventDefault();

@@ -35,6 +35,22 @@ const formatDateShort = (date) => date.toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric'
 });
 
+// ── Stars ─────────────────────────────────────────────────────────────────────
+
+const Stars = ({ value, label }) => {
+    if (!value) return null;
+    return (
+        <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[#b8afa3] tracking-widest uppercase whitespace-nowrap">{label}:</span>
+            <span className="text-[#c9a84c] text-sm leading-none">
+                {Array.from({ length: 5 }, (_, i) => (
+                    <span key={i} className={i < value ? 'opacity-100' : 'opacity-20'}>★</span>
+                ))}
+            </span>
+        </div>
+    );
+};
+
 // ── RoomWidget ────────────────────────────────────────────────────────────────
 
 const RoomWidget = ({ room, selectedDate, onDateChange }) => {
@@ -83,11 +99,16 @@ const RoomWidget = ({ room, selectedDate, onDateChange }) => {
     }, [room.id, selectedDate]);
 
     const handleBookNow = (ts) => {
-        setSelectedTimeslot({ ...ts, showDate: selectedDate.toISOString().split('T')[0] });
+        setSelectedTimeslot({
+            ...ts,
+            showDate: selectedDate.toISOString().split('T')[0],
+            minCapacity: room.min_capacity,
+            maxCapacity: room.max_capacity,
+        });
         setShowModal(true);
     };
 
-    const handleConfirmBooking = async (customer, timeslotDetails, guestCount) => {
+    const handleConfirmBooking = async (customer, timeslotDetails, guestCount, teamName) => {
         try {
             if (!customer.id) {
                 const createRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/customers`, {
@@ -111,7 +132,8 @@ const RoomWidget = ({ room, selectedDate, onDateChange }) => {
                     order_id: orderId,
                     booking_date: new Date().toISOString().split('T')[0],
                     show_date: timeslotDetails.showDate,
-                    show_timeslot: timeslotDetails.timeslot
+                    show_timeslot: timeslotDetails.timeslot,
+                    team_name: teamName || null,
                 })
             });
 
@@ -141,7 +163,7 @@ const RoomWidget = ({ room, selectedDate, onDateChange }) => {
             {/* Image */}
             <div
                 className="relative h-56 overflow-hidden cursor-pointer group flex-shrink-0"
-                onClick={() => navigate(`/rooms/${room.id}`)}
+                onClick={() => navigate(`/rooms/${room.slug}`)}
             >
                 {primaryImage ? (
                     <img
@@ -163,13 +185,20 @@ const RoomWidget = ({ room, selectedDate, onDateChange }) => {
                 {/* Room name + meta */}
                 <h2
                     className="font-['Playfair_Display'] text-2xl text-[#f1ece3] mb-1 cursor-pointer hover:text-[#c9a84c] transition-colors"
-                    onClick={() => navigate(`/rooms/${room.id}`)}
+                    onClick={() => navigate(`/rooms/${room.slug}`)}
                 >
                     {room.title}
                 </h2>
-                <p className="text-xs text-[#b8afa3] tracking-widest uppercase mb-5">
+                <p className="text-xs text-[#b8afa3] tracking-widest uppercase mb-3">
                     {room.duration} min &nbsp;·&nbsp; {room.min_capacity}–{room.max_capacity} guests
                 </p>
+                {(room.difficulty || room.physical_rating || room.scare_factor) && (
+                    <div className="flex flex-col gap-1 mb-5">
+                        <Stars value={room.difficulty} label="Difficulty" />
+                        <Stars value={room.physical_rating} label="Physical" />
+                        <Stars value={room.scare_factor} label="Scare" />
+                    </div>
+                )}
 
                 {/* Date navigation */}
                 <div className="flex items-center justify-between border-t border-b border-[#c9a84c]/10 py-3 mb-5">
@@ -215,21 +244,39 @@ const RoomWidget = ({ room, selectedDate, onDateChange }) => {
                     </div>
                 ) : (
                     <div className="flex flex-wrap gap-2">
-                        {timeslots.map(ts => (
-                            <button
-                                key={ts.timeslot}
-                                onClick={() => !ts.isBooked && handleBookNow(ts)}
-                                disabled={ts.isBooked}
-                                title={ts.isBooked ? 'Already booked' : `Book ${fmt12(ts.startTime)}`}
-                                className={`px-3 py-2 text-xs font-semibold tracking-wide transition-all ${
-                                    ts.isBooked
-                                        ? 'bg-slate-800 text-slate-600 cursor-not-allowed line-through'
-                                        : 'bg-[#0f172a] border border-[#c9a84c]/40 text-[#c9a84c] hover:bg-[#c9a84c] hover:text-[#0f172a] hover:border-[#c9a84c]'
-                                }`}
-                            >
-                                {ts.isBooked ? `${fmt12(ts.startTime)} Full` : fmt12(ts.startTime)}
-                            </button>
-                        ))}
+                        {timeslots.map(ts => {
+                            const [h, m] = ts.startTime.split(':').map(Number);
+                            const slotDate = new Date(selectedDate);
+                            slotDate.setHours(h, m, 0, 0);
+                            const isPast = slotDate < new Date();
+
+                            let cls, label, clickable;
+                            if (isPast) {
+                                cls = 'bg-slate-900/60 text-slate-600 cursor-not-allowed opacity-50';
+                                label = fmt12(ts.startTime);
+                                clickable = false;
+                            } else if (ts.isBooked) {
+                                cls = 'bg-slate-800 text-slate-500 cursor-not-allowed line-through';
+                                label = fmt12(ts.startTime);
+                                clickable = false;
+                            } else {
+                                cls = 'bg-[#0f172a] border border-[#c9a84c]/40 text-[#c9a84c] hover:bg-[#c9a84c] hover:text-[#0f172a] hover:border-[#c9a84c]';
+                                label = fmt12(ts.startTime);
+                                clickable = true;
+                            }
+
+                            return (
+                                <button
+                                    key={ts.timeslot}
+                                    onClick={() => clickable && handleBookNow(ts)}
+                                    disabled={!clickable}
+                                    title={isPast ? 'This time has passed' : ts.isBooked ? 'Already booked' : `Book ${label}`}
+                                    className={`w-28 py-2 text-xs font-semibold tracking-wide text-center transition-all ${cls}`}
+                                >
+                                    {label}
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </div>

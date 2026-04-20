@@ -72,6 +72,13 @@ const NavBar = () => {
                     {token ? (
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                             <NavLink
+                                to="/"
+                                className="text-xs px-3 py-1.5 border border-slate-300 text-slate-600 hover:bg-slate-50 rounded transition-colors"
+                                title="Go to public site"
+                            >
+                                View Site
+                            </NavLink>
+                            <NavLink
                                 to="/staff/profile"
                                 className={({ isActive }) =>
                                     `flex items-center gap-1.5 transition-colors ${isActive ? 'text-[#c9a84c]' : 'text-slate-500 hover:text-slate-800'}`
@@ -92,7 +99,7 @@ const NavBar = () => {
                         </div>
                     ) : (
                         <NavLink
-                            to="/login"
+                            to='/xavro'
                             className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
                         >
                             Staff Login

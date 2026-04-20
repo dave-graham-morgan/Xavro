@@ -20,6 +20,9 @@ def save_room_data(data):
     launch_date = data.get('launchDate')
     sunset_date = data.get('sunsetDate')
     description = data.get('description')
+    difficulty = data.get('difficulty')
+    physical_rating = data.get('physicalRating')
+    scare_factor = data.get('scareFactor')
 
     # Convert max_capacity, min_capacity, duration and reset_buffer to integers if they are strings
     try:
@@ -49,18 +52,31 @@ def save_room_data(data):
         logging.error("Error: Min Capacity must be less than Max Capacity")
         return jsonify({"error": "Min Capacity must be less than Max Capacity"}), 400
 
+    # Check for duplicate title (slug collision)
+    existing = Room.query.filter(db.func.lower(Room.title) == title.lower()).first()
+    if existing:
+        return jsonify({'error': f'A room named "{existing.title}" already exists.'}), 400
+
     # save the room to the db
     response = add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
-                                launch_date, sunset_date, description)
+                                launch_date, sunset_date, description,
+                                difficulty, physical_rating, scare_factor)
     return response
 
 
 def add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
-                     launch_date=None, sunset_date=None, description=None):
+                     launch_date=None, sunset_date=None, description=None,
+                     difficulty=None, physical_rating=None, scare_factor=None):
     # Convert empty strings to None
     launch_date = None if launch_date == "" else launch_date
     sunset_date = None if sunset_date == "" else sunset_date
     description = None if description == "" else description
+
+    def _int_or_none(v):
+        try:
+            return int(v) if v not in (None, '') else None
+        except (ValueError, TypeError):
+            return None
 
     new_room = Room(
         title=title,
@@ -70,7 +86,10 @@ def add_room_service(title, max_capacity, min_capacity, duration, reset_buffer,
         reset_buffer=reset_buffer,
         launch_date=launch_date,
         sunset_date=sunset_date,
-        description=description
+        description=description,
+        difficulty=_int_or_none(difficulty),
+        physical_rating=_int_or_none(physical_rating),
+        scare_factor=_int_or_none(scare_factor),
     )
     try:
         # add the new room to the session and commit to db
@@ -128,7 +147,8 @@ def get_room_availability_service(room_id):
             guest_totals[b.show_timeslot] = guest_totals.get(b.show_timeslot, 0) + b.guest_count
 
         for rule in day_rules:
-            slots = compute_timeslots(rule.start_time, rule.end_time, rule.interval_minutes, rule.room.duration)
+            interval = rule.room.duration + rule.room.reset_buffer
+            slots = compute_timeslots(rule.start_time, rule.end_time, interval, rule.room.duration)
             if any(guest_totals.get(start_minutes, 0) < rule.room.max_capacity for start_minutes, _, _ in slots):
                 available_dates.add(single_date.date())
                 break
@@ -156,7 +176,8 @@ def get_room_timeslots_service(room_id, date_str):
 
         timeslot_list = []
         for rule in rules:
-            slots = compute_timeslots(rule.start_time, rule.end_time, rule.interval_minutes, rule.room.duration)
+            interval = rule.room.duration + rule.room.reset_buffer
+            slots = compute_timeslots(rule.start_time, rule.end_time, interval, rule.room.duration)
             for start_minutes, slot_start, slot_end in slots:
                 booked = guest_totals.get(start_minutes, 0)
                 remaining = max(0, rule.room.max_capacity - booked)

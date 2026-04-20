@@ -70,7 +70,7 @@ const ResetPasswordPage = () => {
                             </div>
                             <p className="text-[#f1ece3] text-sm mb-4">Password updated successfully.</p>
                             <button
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate('/xavro')}
                                 className="w-full py-2.5 bg-[#c9a84c] hover:bg-[#b8972f] text-[#0f172a] text-sm font-semibold tracking-widest uppercase transition-colors rounded"
                             >
                                 Go to Login

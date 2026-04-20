@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
+import { useUnsavedChanges } from '../../utils/useUnsavedChanges';
+import UnsavedChangesModal from '../UnsavedChangesModal';
 
 // Note: this form is for creating bookings for dev only and will not be available in final app
 
@@ -21,6 +23,8 @@ const BookingFormComponent = () => {
 
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
+    const blocker = useUnsavedChanges(isDirty);
 
     useEffect(() => {
         if (bookingId) {
@@ -48,7 +52,8 @@ const BookingFormComponent = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setBookingFormData({ ...bookingFormData, [name]: value });
+        setBookingFormData(prev => ({ ...prev, [name]: value }));
+        setIsDirty(true);
     };
 
     const handleSubmit = async (e) => {
@@ -57,14 +62,12 @@ const BookingFormComponent = () => {
         const method = bookingId ? 'PUT' : 'POST';
 
         try {
-            const response = await authFetch(url, {
-                method,
-                body: JSON.stringify(bookingFormData)
-            });
+            const response = await authFetch(url, { method, body: JSON.stringify(bookingFormData) });
             const data = await response.json();
             if (response.ok) {
                 setResponseMessage(data.message);
                 setErrorMessage('');
+                setIsDirty(false);
                 navigate('/staff/bookings');
             } else {
                 setErrorMessage(data.error);
@@ -77,13 +80,20 @@ const BookingFormComponent = () => {
     };
 
     return (
-        <div className="max-w-lg">
+        <div className="max-w-lg mx-auto">
+            <UnsavedChangesModal blocker={blocker} />
+
             {responseMessage && <p className="text-green-600 text-sm mb-4">{responseMessage}</p>}
             {errorMessage && <p className="text-red-600 text-sm mb-4">{errorMessage}</p>}
 
             <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="px-6 py-4 border-b border-slate-200">
+                <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-slate-800">{bookingId ? 'Edit Booking' : 'Add Booking'}</h2>
+                    {isDirty && (
+                        <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                            Unsaved changes
+                        </span>
+                    )}
                 </div>
                 <div className="p-6">
                     <form onSubmit={handleSubmit}>

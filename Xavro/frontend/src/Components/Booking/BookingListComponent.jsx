@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
 
 const BookingListComponent = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
+
+    const roomFilter = searchParams.get('room');
 
     useEffect(() => {
         const fetchBookings = async () => {
             try {
-                const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/bookings`);
+                // When filtering by room (coming from a conflict warning), fetch only
+                // future bookings for that room so past conflicts don't clutter the view.
+                const url = roomFilter
+                    ? `${import.meta.env.VITE_API_BASE_URL}api/rooms/${roomFilter}/future-bookings`
+                    : `${import.meta.env.VITE_API_BASE_URL}api/bookings`;
+                const response = await authFetch(url);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 setBookings(data);
@@ -22,7 +30,7 @@ const BookingListComponent = () => {
             }
         };
         fetchBookings();
-    }, []);
+    }, [roomFilter]);
 
     const handleDelete = async (bookingId) => {
         try {
@@ -40,9 +48,13 @@ const BookingListComponent = () => {
     if (loading) return <div className="text-slate-500 text-sm">Loading...</div>;
     if (error) return <div className="text-red-500 text-sm">Error: {error.message}</div>;
 
+    // When roomFilter is set we fetch from future-bookings (already scoped to that room),
+    // so no client-side filtering is needed. Without a filter we show everything.
+    const visibleBookings = bookings;
+
     return (
         <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-slate-800">Bookings</h2>
                 <button
                     onClick={() => navigate('/staff/bookings/add')}
@@ -53,8 +65,25 @@ const BookingListComponent = () => {
                 </button>
             </div>
 
-            {bookings.length === 0 ? (
-                <p className="text-slate-500 text-sm">No bookings available.</p>
+            {roomFilter && (
+                <div className="flex items-center gap-3 mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-600 shrink-0"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                    <span className="text-sm text-amber-800">
+                        Showing bookings for room ID <strong>{roomFilter}</strong> only
+                    </span>
+                    <button
+                        onClick={() => setSearchParams({})}
+                        className="ml-auto text-xs text-amber-600 hover:text-amber-800 underline transition-colors"
+                    >
+                        Clear filter
+                    </button>
+                </div>
+            )}
+
+            {visibleBookings.length === 0 ? (
+                <p className="text-slate-500 text-sm">
+                    {roomFilter ? `No upcoming bookings found for room ID ${roomFilter}.` : 'No bookings available.'}
+                </p>
             ) : (
                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                     <div className="overflow-x-auto">
@@ -72,7 +101,7 @@ const BookingListComponent = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {bookings.map(booking => (
+                                {visibleBookings.map(booking => (
                                     <tr key={booking.id} className="border-b border-slate-100 hover:bg-slate-50">
                                         <td className="px-4 py-3 text-slate-600">{booking.room_id}</td>
                                         <td className="px-4 py-3 text-slate-600">{booking.customer_id}</td>

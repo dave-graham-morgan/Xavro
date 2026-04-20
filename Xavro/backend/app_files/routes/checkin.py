@@ -1,3 +1,6 @@
+import os
+import cloudinary
+import cloudinary.uploader
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from ..models import db, Booking, CustomerRoomCompletion
@@ -5,6 +8,12 @@ from ..decorators import role_required
 from ..utils import Roles
 from datetime import datetime, date
 from sqlalchemy.exc import SQLAlchemyError
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+)
 
 checkin_blueprint = Blueprint('checkin', __name__)
 
@@ -26,6 +35,8 @@ def _booking_dict(booking):
         'waivers_signed': waivers_signed,
         'paid': booking.status != 'pending',
         'status': booking.status,
+        'team_name': booking.team_name,
+        'room_duration': room.duration if room else None,
         'started_at': booking.started_at.isoformat() if booking.started_at else None,
     }
 
@@ -54,6 +65,9 @@ def get_today():
 def checkin_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     booking.status = 'checked_in'
+    data = request.get_json(silent=True) or {}
+    if 'team_name' in data:
+        booking.team_name = data['team_name'] or None
     try:
         db.session.commit()
         return jsonify(_booking_dict(booking))
@@ -132,8 +146,11 @@ def complete_session():
     completed_date = date.today()
     completed_time = datetime.utcnow().time()
 
+    escape_seconds = (duration_minutes * 60) if escaped and duration_minutes else None
+
     for b in bookings:
         b.status = 'completed'
+        b.escape_time_seconds = escape_seconds
         completion = CustomerRoomCompletion(
             customer_id=b.customer_id,
             room_id=b.room_id,
@@ -147,6 +164,48 @@ def complete_session():
     try:
         db.session.commit()
         return jsonify({'message': 'Session completed'})
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ── Upload team photo for a completed session ─────────────────────────────────
+
+@checkin_blueprint.route('/api/checkin/session/photo', methods=['POST'])
+@cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
+def upload_team_photo():
+    room_id = request.form.get('room_id', type=int)
+    show_date_str = request.form.get('show_date')
+    show_timeslot = request.form.get('show_timeslot', type=int)
+    file = request.files.get('file')
+
+    if not all([room_id, show_date_str, show_timeslot is not None, file]):
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    try:
+        show_date = datetime.strptime(show_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    try:
+        result = cloudinary.uploader.upload(file.read(), folder='xavro/team_photos')
+        photo_url = result['secure_url']
+    except Exception as e:
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+
+    bookings = Booking.query.filter(
+        Booking.room_id == room_id,
+        Booking.show_date == show_date,
+        Booking.show_timeslot == show_timeslot,
+    ).all()
+
+    for b in bookings:
+        b.team_photo_url = photo_url
+
+    try:
+        db.session.commit()
+        return jsonify({'photo_url': photo_url})
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

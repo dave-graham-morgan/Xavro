@@ -97,6 +97,25 @@ def delete_booking(booking_id):
         return jsonify({'error': 'something really bad went wrong'}), 500
 
 
+@bookings_blueprint.route('/api/rooms/<int:room_id>/future-bookings', methods=['GET'])
+@cross_origin()
+@role_required(Roles.EMPLOYEE, Roles.ADMIN)
+def get_future_bookings(room_id):
+    from datetime import date
+    today = date.today()
+    bookings = Booking.query.filter(
+        Booking.room_id == room_id,
+        Booking.show_date >= today,
+        Booking.status.notin_(['cancelled', 'completed'])
+    ).all()
+    return jsonify([{
+        'id': b.id,
+        'show_date': b.show_date.strftime('%Y-%m-%d'),
+        'show_timeslot': b.show_timeslot,
+        'status': b.status,
+    } for b in bookings])
+
+
 @bookings_blueprint.route('/api/bookings', methods=['POST'])
 @cross_origin()
 def add_booking():
@@ -107,9 +126,10 @@ def add_booking():
             customer_id=data['customer_id'],
             guest_count=data['guest_count'],
             order_id=data['order_id'],
-            booking_date=datetime.strptime(data['booking_date'], '%Y-%m-%d').date(),  # Use booking_date
-            show_date=datetime.strptime(data['show_date'], '%Y-%m-%d').date(),  # Use booking_date
-            show_timeslot=data['show_timeslot']
+            booking_date=datetime.strptime(data['booking_date'], '%Y-%m-%d').date(),
+            show_date=datetime.strptime(data['show_date'], '%Y-%m-%d').date(),
+            show_timeslot=data['show_timeslot'],
+            team_name=data.get('team_name') or None,
         )
 
         db.session.add(new_booking)

@@ -23,7 +23,7 @@ const RegisterFormComponent = () => {
                 throw new Error(data.error || 'Failed to register');
             }
 
-            navigate('/login');
+            navigate('/xavro');
         } catch (error) {
             setError(error.message);
         }
@@ -80,7 +80,7 @@ const RegisterFormComponent = () => {
                 <p className="text-center mt-6 text-sm text-[#b8afa3]">
                     Already have an account?{' '}
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/xavro')}
                         className="text-[#c9a84c] hover:text-[#b8972f] transition-colors"
                     >
                         Login

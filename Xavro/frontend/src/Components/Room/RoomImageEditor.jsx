@@ -133,8 +133,10 @@ const RoomImageEditor = ({ roomId }) => {
     const [loading, setLoading]         = useState(true);
     const [uploading, setUploading]     = useState(false);
     const [error, setError]             = useState(null);
-    const [lightboxIdx, setLightboxIdx] = useState(null); // null = closed
-    const fileInputRef = useRef(null);
+    const [lightboxIdx, setLightboxIdx] = useState(null);
+    const [isDragging, setIsDragging]   = useState(false);
+    const fileInputRef  = useRef(null);
+    const dragCountRef  = useRef(0); // track enter/leave pairs to avoid flicker
 
     const load = async () => {
         setLoading(true);
@@ -151,10 +153,11 @@ const RoomImageEditor = ({ roomId }) => {
 
     useEffect(() => { load(); }, [roomId]);
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        e.target.value = '';
+    const uploadFile = async (file) => {
+        if (!file || !file.type.startsWith('image/')) {
+            setError('Please drop an image file.');
+            return;
+        }
         setUploading(true);
         setError(null);
         try {
@@ -174,6 +177,37 @@ const RoomImageEditor = ({ roomId }) => {
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+        uploadFile(file);
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        dragCountRef.current += 1;
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        dragCountRef.current -= 1;
+        if (dragCountRef.current === 0) setIsDragging(false);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault(); // required to allow drop
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        dragCountRef.current = 0;
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) uploadFile(file);
     };
 
     const handleSetPrimary = async (imageId) => {
@@ -204,7 +238,21 @@ const RoomImageEditor = ({ roomId }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 mt-6">
+            <div
+                className={`bg-white rounded-lg shadow-sm border mt-6 transition-colors relative ${
+                    isDragging ? 'border-[#c9a84c] bg-amber-50/40' : 'border-slate-200'
+                }`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
+                {isDragging && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#c9a84c] bg-amber-50/60 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                        <p className="mt-2 text-sm font-semibold text-[#c9a84c]">Drop to upload</p>
+                    </div>
+                )}
                 <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold text-slate-800">Room Photos</h2>
@@ -242,7 +290,7 @@ const RoomImageEditor = ({ roomId }) => {
                             className="border-2 border-dashed border-slate-200 rounded-lg p-10 text-center cursor-pointer hover:border-[#c9a84c]/50 hover:bg-slate-50 transition-colors"
                         >
                             <svg className="mx-auto mb-3 text-slate-300" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            <p className="text-sm text-slate-400">Click to add the first photo</p>
+                            <p className="text-sm text-slate-400">Click or drag & drop to add the first photo</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -291,7 +339,7 @@ const RoomImageEditor = ({ roomId }) => {
                                 className="aspect-square border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#c9a84c]/50 hover:bg-slate-50 transition-colors text-slate-300 hover:text-slate-400"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                <span className="text-xs mt-1">Add photo</span>
+                                <span className="text-xs mt-1">Add / drop photo</span>
                             </div>
                         </div>
                     )}

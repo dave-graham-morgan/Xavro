@@ -1,4 +1,5 @@
 import os
+import re
 import cloudinary
 import cloudinary.uploader
 from flask import Blueprint, request, jsonify
@@ -18,6 +19,10 @@ cloudinary.config(
 
 # register blueprint
 rooms_blueprint = Blueprint('rooms', __name__)
+
+
+def _slugify(title):
+    return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', title.lower())).strip('-')
 
 
 @rooms_blueprint.route('/api/rooms', methods=['POST', 'OPTIONS'])
@@ -52,6 +57,7 @@ def get_all_rooms():
         rooms = Room.query.all()
         rooms_list = [{
             'id': room.id,
+            'slug': _slugify(room.title),
             'title': room.title,
             'max_capacity': room.max_capacity,
             'min_capacity': room.min_capacity,
@@ -59,7 +65,10 @@ def get_all_rooms():
             'reset_buffer': room.reset_buffer,
             'launch_date': room.launch_date,
             'sunset_date': room.sunset_date,
-            'description': room.description
+            'description': room.description,
+            'difficulty': room.difficulty,
+            'physical_rating': room.physical_rating,
+            'scare_factor': room.scare_factor,
         } for room in rooms]
         return jsonify(rooms_list)
     except SQLAlchemyError as sql_error:
@@ -75,6 +84,7 @@ def get_room(room_id):
     room = Room.query.get_or_404(room_id)
     return jsonify({
         'id': room.id,
+        'slug': _slugify(room.title),
         'title': room.title,
         'max_capacity': room.max_capacity,
         'min_capacity': room.min_capacity,
@@ -82,7 +92,57 @@ def get_room(room_id):
         'reset_buffer': room.reset_buffer,
         'launch_date': room.launch_date.isoformat() if room.launch_date else None,
         'sunset_date': room.sunset_date.isoformat() if room.sunset_date else None,
-        'description': room.description
+        'description': room.description,
+        'difficulty': room.difficulty,
+        'physical_rating': room.physical_rating,
+        'scare_factor': room.scare_factor,
+    })
+
+
+@rooms_blueprint.route('/api/rooms/<int:room_id>/leaderboard', methods=['GET'])
+@cross_origin()
+def get_room_leaderboard(room_id):
+    from ..models import Booking
+    entries = (
+        Booking.query
+        .filter(
+            Booking.room_id == room_id,
+            Booking.escape_time_seconds.isnot(None),
+        )
+        .order_by(Booking.escape_time_seconds.asc())
+        .limit(5)
+        .all()
+    )
+    return jsonify([{
+        'rank': i + 1,
+        'team_name': b.team_name or 'Anonymous',
+        'escape_time_seconds': b.escape_time_seconds,
+        'team_photo_url': b.team_photo_url,
+        'show_date': b.show_date.strftime('%B %d, %Y'),
+    } for i, b in enumerate(entries)])
+
+
+@rooms_blueprint.route('/api/rooms/slug/<string:slug>', methods=['GET'])
+@cross_origin()
+def get_room_by_slug(slug):
+    rooms = Room.query.all()
+    room = next((r for r in rooms if _slugify(r.title) == slug), None)
+    if not room:
+        return jsonify({'error': 'Room not found'}), 404
+    return jsonify({
+        'id': room.id,
+        'slug': _slugify(room.title),
+        'title': room.title,
+        'max_capacity': room.max_capacity,
+        'min_capacity': room.min_capacity,
+        'duration': room.duration,
+        'reset_buffer': room.reset_buffer,
+        'launch_date': room.launch_date.isoformat() if room.launch_date else None,
+        'sunset_date': room.sunset_date.isoformat() if room.sunset_date else None,
+        'description': room.description,
+        'difficulty': room.difficulty,
+        'physical_rating': room.physical_rating,
+        'scare_factor': room.scare_factor,
     })
 
 
@@ -124,7 +184,21 @@ def update_room(room_id):
     data = request.get_json()
     room = Room.query.get_or_404(room_id)
     try:
-        room.title = data['title']
+        def _int_or_none(v):
+            try:
+                return int(v) if v not in (None, '') else None
+            except (ValueError, TypeError):
+                return None
+
+        new_title = data['title']
+        duplicate = Room.query.filter(
+            db.func.lower(Room.title) == new_title.lower(),
+            Room.id != room_id
+        ).first()
+        if duplicate:
+            return jsonify({'error': f'A room named "{duplicate.title}" already exists.'}), 400
+
+        room.title = new_title
         room.max_capacity = data['maxCapacity']
         room.min_capacity = data['minCapacity']
         room.duration = data['duration']
@@ -132,6 +206,9 @@ def update_room(room_id):
         room.launch_date = data['launchDate']
         room.sunset_date = data['sunsetDate']
         room.description = data['description']
+        room.difficulty = _int_or_none(data.get('difficulty'))
+        room.physical_rating = _int_or_none(data.get('physicalRating'))
+        room.scare_factor = _int_or_none(data.get('scareFactor'))
 
         db.session.commit()
         return jsonify({'message': 'Room updated successfully'})

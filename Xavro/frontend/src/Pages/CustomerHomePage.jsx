@@ -10,7 +10,7 @@ const RoomCard = ({ room }) => {
     return (
         <div
             className="group cursor-pointer border border-[#c9a84c]/20 hover:border-[#c9a84c]/60 transition-all duration-300 overflow-hidden"
-            onClick={() => navigate(`/rooms/${room.id}`)}
+            onClick={() => navigate(`/rooms/${room.slug}`)}
         >
             <div className="relative h-56 overflow-hidden bg-[#1e293b]">
                 {primaryImage ? (

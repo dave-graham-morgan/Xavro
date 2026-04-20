@@ -5,6 +5,7 @@ const ModalComponent = ({ show, handleClose, handleConfirm, timeslotDetails }) =
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [guestCount, setGuestCount] = useState('');
+    const [teamName, setTeamName] = useState('');
     const [customer, setCustomer] = useState(null);
 
     useEffect(() => {
@@ -29,10 +30,14 @@ const ModalComponent = ({ show, handleClose, handleConfirm, timeslotDetails }) =
     };
 
     const handleConfirmBooking = () => {
-        handleConfirm(customer || { first_name: firstName, last_name: lastName, email }, timeslotDetails, guestCount);
+        handleConfirm(customer || { first_name: firstName, last_name: lastName, email }, timeslotDetails, guestCount, teamName);
     };
 
-    const isConfirmDisabled = !email || !firstName || !lastName || !guestCount;
+    const minCap = timeslotDetails.minCapacity ?? 1;
+    const maxCap = timeslotDetails.maxCapacity ?? 99;
+    const guestNum = parseInt(guestCount);
+    const guestValid = guestCount !== '' && guestNum >= minCap && guestNum <= maxCap;
+    const isConfirmDisabled = !email || !firstName || !lastName || !guestValid;
 
     const inputClass = "w-full px-3 py-2 bg-[#0f172a] border border-[#c9a84c]/20 rounded-md text-[#f1ece3] text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 placeholder:text-slate-500";
 
@@ -97,12 +102,37 @@ const ModalComponent = ({ show, handleClose, handleConfirm, timeslotDetails }) =
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-[#b8afa3] mb-1.5">Number of Guests</label>
+                        <label className="block text-sm font-medium text-[#b8afa3] mb-1.5">
+                            Number of Guests
+                            <span className="ml-1.5 font-normal text-[#b8afa3]/50">({minCap}–{maxCap})</span>
+                        </label>
                         <input
                             type="number"
-                            placeholder="How many guests?"
+                            placeholder={`${minCap} to ${maxCap} guests`}
                             value={guestCount}
+                            min={minCap}
+                            max={maxCap}
                             onChange={(e) => setGuestCount(e.target.value)}
+                            className={inputClass}
+                        />
+                        {guestCount !== '' && !guestValid && (
+                            <p className="text-red-400 text-xs mt-1">
+                                {guestNum < minCap
+                                    ? `Minimum ${minCap} guest${minCap !== 1 ? 's' : ''} required`
+                                    : `Maximum ${maxCap} guests allowed`}
+                            </p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-[#b8afa3] mb-1.5">
+                            Team Name <span className="font-normal text-[#b8afa3]/50">(optional)</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g. The Escape Artists"
+                            value={teamName}
+                            onChange={(e) => setTeamName(e.target.value)}
                             className={inputClass}
                         />
                     </div>

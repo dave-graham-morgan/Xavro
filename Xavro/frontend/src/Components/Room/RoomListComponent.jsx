@@ -17,7 +17,7 @@ const RoomListComponent = () => {
                 }
                 const data = await response.json();
                 const roomsWithAssociations = await Promise.all(data.map(async room => {
-                    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/${room.id}/associations`);
+                    const response = await authFetch(`${import.meta.env.VITE_API_BASE_URL}api/rooms/${room.id}/associations`);
                     const associationData = await response.json();
                     return { ...room, hasAssociations: associationData.has_associations };
                 }));

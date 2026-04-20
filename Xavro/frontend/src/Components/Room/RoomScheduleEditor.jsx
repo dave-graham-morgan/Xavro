@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { authFetch } from '../../utils/authFetch';
 
 const API = import.meta.env.VITE_API_BASE_URL;
@@ -123,16 +124,19 @@ const OtherRoomsPanel = ({ currentRoomId, selectedDays, currentSlotsByDay, onCon
                 for (const st of relevant) {
                     const key = `${st.start_time.slice(0, 5)}|${st.end_time.slice(0, 5)}`;
                     if (!groups[key]) groups[key] = {
-                        startTime:    st.start_time.slice(0, 5),
-                        endTime:      st.end_time.slice(0, 5),
-                        intervalMins: st.interval_minutes,
-                        days:         [],
+                        startTime: st.start_time.slice(0, 5),
+                        endTime:   st.end_time.slice(0, 5),
+                        days:      [],
                     };
                     groups[key].days.push(st.day_of_week);
                 }
 
+                // Always derive interval from the room's current duration + reset_buffer
+                // so stale interval_minutes on showtime records don't cause wrong slot counts.
+                const intervalMins = room.duration + room.reset_buffer;
+
                 const scheduleGroups = Object.values(groups).map(g => {
-                    const slots = computeSlots(g.startTime, g.endTime, g.intervalMins, room.duration);
+                    const slots = computeSlots(g.startTime, g.endTime, intervalMins, room.duration);
                     const collisionMins = new Set();
                     for (const day of g.days) {
                         const mySlotMins = currentSlotsByDay[day] || [];
@@ -222,8 +226,8 @@ const RoomScheduleEditor = ({ roomId, duration, resetBuffer }) => {
     const [showExtra, setShowExtra]       = useState(false);
     // conflictMinsByDay: { [dayIdx]: Set<number> } — which of OUR slot minutes conflict with other rooms
     const [conflictMinsByDay, setConflictMinsByDay] = useState({});
-
     const [messageFading, setMessageFading] = useState(false);
+    const [bookingWarning, setBookingWarning] = useState(null); // { count, bookings } when pending confirmation
 
     useEffect(() => {
         if (!message) { setMessageFading(false); return; }
@@ -282,7 +286,7 @@ const RoomScheduleEditor = ({ roomId, duration, resetBuffer }) => {
         if (next.length <= 1) setShowExtra(false);
     };
 
-    const save = async () => {
+    const doSave = async () => {
         const payload = rows.flatMap(row =>
             row.days.map(day => ({
                 day_of_week: day,
@@ -292,6 +296,7 @@ const RoomScheduleEditor = ({ roomId, duration, resetBuffer }) => {
         );
         setSaving(true);
         setMessage(null);
+        setBookingWarning(null);
         try {
             const res  = await authFetch(`${API}api/rooms/${roomId}/showtimes/bulk`, {
                 method: 'PUT',
@@ -305,6 +310,20 @@ const RoomScheduleEditor = ({ roomId, duration, resetBuffer }) => {
         } finally {
             setSaving(false);
         }
+    };
+
+    const save = async () => {
+        try {
+            const res      = await authFetch(`${API}api/rooms/${roomId}/future-bookings`);
+            const bookings = await res.json();
+            if (bookings.length > 0) {
+                setBookingWarning({ count: bookings.length, bookings });
+                return;
+            }
+        } catch {
+            // If the check fails, proceed anyway
+        }
+        await doSave();
     };
 
     // currentSlotsByDay: { [dayIdx]: number[] } — slot minutes for each selected day
@@ -456,6 +475,34 @@ const RoomScheduleEditor = ({ roomId, duration, resetBuffer }) => {
                     onConflictsChange={setConflictMinsByDay}
                 />
 
+                {/* Booking conflict warning */}
+                {bookingWarning && (
+                    <div className="mt-4 px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg">
+                        <p className="text-sm font-semibold text-amber-800 mb-1">
+                            ⚠ This room has {bookingWarning.count} upcoming booking{bookingWarning.count !== 1 ? 's' : ''}
+                        </p>
+                        <p className="text-xs text-amber-700 mb-3">
+                            Changing the schedule will not cancel them, but their timeslots may no longer align with the new schedule. Review those bookings before proceeding.
+                        </p>
+                        <Link
+                            to={`/staff/bookings?room=${roomId}`}
+                            className="inline-block text-xs text-amber-700 underline hover:text-amber-900 mb-3 transition-colors"
+                        >
+                            View affected bookings →
+                        </Link>
+                        <div className="flex gap-2">
+                            <button type="button" onClick={doSave} disabled={saving}
+                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded transition-colors disabled:opacity-50">
+                                {saving ? 'Saving…' : 'Save Anyway'}
+                            </button>
+                            <button type="button" onClick={() => setBookingWarning(null)}
+                                className="px-3 py-1.5 border border-amber-300 text-amber-700 hover:bg-amber-100 text-xs font-semibold rounded transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
                     <button type="button" onClick={addExtraRow}
@@ -468,7 +515,7 @@ const RoomScheduleEditor = ({ roomId, duration, resetBuffer }) => {
                                 {message.text}
                             </span>
                         )}
-                        <button type="button" onClick={save} disabled={saving}
+                        <button type="button" onClick={save} disabled={saving || !!bookingWarning}
                             className="px-4 py-2 bg-[#c9a84c] hover:bg-[#b8972f] text-[#0f172a] text-sm font-semibold rounded transition-colors disabled:opacity-50">
                             {saving ? 'Saving…' : 'Save Schedule'}
                         </button>

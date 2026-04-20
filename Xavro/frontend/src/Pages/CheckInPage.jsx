@@ -142,11 +142,13 @@ const CheckInPage = () => {
     const [ciBooking, setCiBooking] = useState(null);
     const [ciWaivers, setCiWaivers] = useState([]);
     const [ciPayment, setCiPayment] = useState(false);
+    const [ciTeamName, setCiTeamName] = useState('');
 
     // Completion modal
-    const [compKey, setCompKey]         = useState(null); // `${timeslot}|${room_name}`
-    const [escaped, setEscaped]         = useState(null);
-    const [compMinutes, setCompMinutes] = useState('');
+    const [compKey, setCompKey]             = useState(null); // `${timeslot}|${room_name}`
+    const [escaped, setEscaped]             = useState(null);
+    const [compMinutes, setCompMinutes]     = useState('');
+    const [compRoomDuration, setCompRoomDuration] = useState(null);
 
     // Clock tick
     useEffect(() => {
@@ -190,12 +192,14 @@ const CheckInPage = () => {
         setCiBooking(booking);
         setCiWaivers(Array.from({ length: booking.guest_count }, (_, i) => i < booking.waivers_signed));
         setCiPayment(booking.paid);
+        setCiTeamName(booking.team_name || '');
     };
 
     const confirmCheckIn = async () => {
         try {
             const res = await authFetch(`${API}api/checkin/bookings/${ciBooking.id}/checkin`, {
                 method: 'POST',
+                body: JSON.stringify({ team_name: ciTeamName || null }),
             });
             if (!res.ok) throw new Error('Check-in failed');
             const updated = await res.json();
@@ -230,9 +234,11 @@ const CheckInPage = () => {
     const openCompletion = (timeslot, roomName) => {
         const key = `${timeslot}|${roomName}`;
         const elapsedMins = timers[key] ? Math.floor((now - timers[key]) / 60000) : '';
+        const duration = bookings.find(b => b.show_timeslot === timeslot && b.room_name === roomName)?.room_duration ?? null;
         setCompKey(key);
         setEscaped(null);
         setCompMinutes(String(elapsedMins));
+        setCompRoomDuration(duration);
     };
 
     const saveCompletion = async () => {
@@ -248,7 +254,7 @@ const CheckInPage = () => {
                     show_date: showDate,
                     show_timeslot: timeslot,
                     escaped,
-                    duration_minutes: parseInt(compMinutes) || null,
+                    duration_minutes: escaped ? (parseInt(compMinutes) || null) : (compRoomDuration ?? null),
                 }),
             });
             if (!res.ok) throw new Error('Failed to record completion');
@@ -260,6 +266,35 @@ const CheckInPage = () => {
             setCompKey(null);
         } catch (e) {
             alert(e.message);
+        }
+    };
+
+    const handleTeamPhoto = async (timeslot, roomName, showDate, e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+        const roomId = getRoomId(timeslot, roomName);
+        const form = new FormData();
+        form.append('file', file);
+        form.append('room_id', roomId);
+        form.append('show_date', showDate);
+        form.append('show_timeslot', timeslot);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API}api/checkin/session/photo`, {
+                method: 'POST',
+                headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+                body: form,
+            });
+            if (!res.ok) throw new Error('Photo upload failed');
+            const data = await res.json();
+            setBookings(bs => bs.map(b =>
+                b.show_timeslot === timeslot && b.room_name === roomName
+                    ? { ...b, team_photo_url: data.photo_url }
+                    : b
+            ));
+        } catch (err) {
+            alert(err.message);
         }
     };
 
@@ -424,6 +459,30 @@ const CheckInPage = () => {
                                                         </p>
                                                     </div>
                                                 )}
+
+                                                {/* Team photo upload — shown when session is complete */}
+                                                {allDone && (
+                                                    <div className="px-4 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+                                                        {roomBookings[0]?.team_photo_url ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <img src={roomBookings[0].team_photo_url} alt="Team" className="w-8 h-8 rounded-full object-cover border border-slate-200" />
+                                                                <span className="text-xs text-slate-500">Team photo saved</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-400">Add a team photo for the leaderboard</span>
+                                                        )}
+                                                        <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-[#c9a84c] cursor-pointer transition-colors">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                                            {roomBookings[0]?.team_photo_url ? 'Replace' : 'Upload photo'}
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={e => handleTeamPhoto(timeslot, roomName, showDate, e)}
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
@@ -488,6 +547,18 @@ const CheckInPage = () => {
                                     : <span className="text-xs text-red-400 font-medium">Not paid</span>
                                 }
                             </label>
+                        </div>
+
+                        {/* Team name */}
+                        <div className="mb-6">
+                            <p className="text-xs font-semibold text-[#b8afa3] uppercase tracking-widest mb-3">Team Name <span className="normal-case font-normal text-[#b8afa3]/50">(optional)</span></p>
+                            <input
+                                type="text"
+                                value={ciTeamName}
+                                onChange={e => setCiTeamName(e.target.value)}
+                                placeholder="e.g. The Escape Artists"
+                                className="w-full px-3 py-2 bg-[#0f172a] border border-[#c9a84c]/20 rounded-md text-[#f1ece3] text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40 placeholder:text-slate-500"
+                            />
                         </div>
 
                         {/* Warning banner */}
@@ -560,22 +631,31 @@ const CheckInPage = () => {
                             </div>
                         </div>
 
-                        {/* Duration */}
-                        <div className="mb-6">
-                            <label className="text-xs font-semibold text-[#b8afa3] uppercase tracking-widest block mb-2">
-                                Time taken (minutes)
-                                <span className="ml-1 normal-case font-normal text-[#b8afa3]/60">— pre-filled from timer</span>
-                            </label>
-                            <input
-                                type="number"
-                                value={compMinutes}
-                                onChange={e => setCompMinutes(e.target.value)}
-                                min="1"
-                                max="120"
-                                className="w-full px-3 py-2.5 bg-[#0f172a] border border-[#c9a84c]/20 rounded-md text-[#f1ece3] text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40"
-                                placeholder="e.g. 52"
-                            />
-                        </div>
+                        {/* Duration — only shown when escaped */}
+                        {escaped === true && (
+                            <div className="mb-6">
+                                <label className="text-xs font-semibold text-[#b8afa3] uppercase tracking-widest block mb-2">
+                                    Time taken (minutes)
+                                    <span className="ml-1 normal-case font-normal text-[#b8afa3]/60">— pre-filled from timer</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    value={compMinutes}
+                                    onChange={e => setCompMinutes(e.target.value)}
+                                    min="1"
+                                    max="120"
+                                    className="w-full px-3 py-2.5 bg-[#0f172a] border border-[#c9a84c]/20 rounded-md text-[#f1ece3] text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/40"
+                                    placeholder="e.g. 52"
+                                />
+                            </div>
+                        )}
+                        {escaped === false && compRoomDuration && (
+                            <div className="mb-6 px-4 py-3 bg-[#0f172a]/40 border border-white/5 rounded-lg">
+                                <p className="text-xs text-[#b8afa3]">
+                                    Duration recorded as <span className="text-[#f1ece3] font-medium">{compRoomDuration} minutes</span> (full room time)
+                                </p>
+                            </div>
+                        )}
 
                         <div className="flex gap-3">
                             <button onClick={() => setCompKey(null)}

@@ -44,6 +44,9 @@ class Room(db.Model):
     launch_date = db.Column(db.DateTime, nullable=True)
     sunset_date = db.Column(db.DateTime, nullable=True)
     description = db.Column(db.String, nullable=True)
+    difficulty = db.Column(db.Integer, nullable=True)       # 1–5
+    physical_rating = db.Column(db.Integer, nullable=True)  # 1–5
+    scare_factor = db.Column(db.Integer, nullable=True)     # 1–5
 
     showtimes = relationship("Showtime", back_populates="room")
     special_schedules = relationship("SpecialSchedule", back_populates="room")
@@ -150,6 +153,9 @@ class Booking(db.Model):
     show_timeslot = db.Column(db.Integer, nullable=False)  # minutes since midnight; unique slot key
     status = db.Column(db.String(20), nullable=False, default='confirmed')
     # statuses: pending | confirmed | checked_in | in_progress | completed | cancelled
+    team_name = db.Column(db.String(100), nullable=True)
+    escape_time_seconds = db.Column(db.Integer, nullable=True)   # null = did not escape
+    team_photo_url = db.Column(db.String, nullable=True)
     stripe_session_id = db.Column(db.String, nullable=True)
     started_at = db.Column(db.DateTime, nullable=True)  # set when staff starts the room
 
@@ -207,8 +213,8 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False)
+    username = db.Column(db.String(20), nullable=False, unique=True)
     password = db.Column(db.String(256), nullable=False)
-    email = db.Column(db.String(256), nullable=False)
+    email = db.Column(db.String(256), nullable=False, unique=True)
     last_login = db.Column(db.DateTime, nullable=True)
     role = db.Column(db.Enum(Roles), default=Roles.EMPLOYEE, nullable=False)
